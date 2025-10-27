@@ -1,17 +1,17 @@
-import { api } from '.';
+// src/api/attendance.js
+import { api } from ".";
 
-export const markAttendance = async (credentials) => {
-  return await api.post(`attendance`, credentials);
-};
+export const createAttendance = async (credentials) =>
+  api.post(`attendance`, credentials);
 
-export const fetchUserAttendedEvents = async (id) => {
-  return await api.get(`/attendance/user/${id}`);
-};
+export const updateAttendance = async (credentials) =>
+  api.put(`/attendance`, credentials);
 
-export const fetchEventAttendance = async (id) => {
-  return await api.get(`/attendance/event/${id}`);
-};
+export const getUserAttendance = async (userId) =>
+  api.get(`/attendance/user/${userId}`);
 
-export const fetchTotalAttendance = async () => {
-  return await api.get(`/attendance/`);
-};
+export const getEventAttendance = async (eventId) =>
+  api.get(`/attendance/event/${eventId}`);
+
+export const getUserEventAttendance = async (userId, eventId) =>
+  api.get(`/attendance/user/${userId}/event/${eventId}`);

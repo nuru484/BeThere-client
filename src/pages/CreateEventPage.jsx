@@ -1,15 +1,15 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useCreateEvent } from '@/hooks/useEvent';
-import EventForm from '@/components/event/EventForm';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useCreateEvent } from "@/hooks/useEvent";
+import EventForm from "@/components/event/EventForm";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogAction,
   AlertDialogDescription,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 
 const CreateEventPage = () => {
   const { mutate: createEvent, isPending, isError, error } = useCreateEvent();
@@ -25,7 +25,7 @@ const CreateEventPage = () => {
   };
 
   const handleRedirect = () => {
-    navigate('/dashboard');
+    navigate("/dashboard");
   };
 
   return (
@@ -35,7 +35,7 @@ const CreateEventPage = () => {
           onSubmit={onSubmit}
           isLoading={isPending}
           onCancel={() => {
-            navigate(`/dashboard`);
+            navigate(`/dashboard/events`);
           }}
         />
       </div>

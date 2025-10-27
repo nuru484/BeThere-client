@@ -33,16 +33,22 @@ const LoginForm = ({ onSubmit, isLoading }) => {
           <div className="relative">
             <Mail className="absolute top-3 left-3 text-gray-400" size={20} />
             <input
-              type="text"
-              {...register('username', { required: 'Username is required' })}
-              placeholder="Username"
+              type="email"
+              {...register('email', { 
+                required: 'Email is required',
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: 'Invalid email address'
+                }
+              })}
+              placeholder="Email"
               className={`w-full pl-10 pr-3 py-2 rounded-lg border ${
-                errors.username ? 'border-red-500' : 'border-gray-300'
+                errors.email ? 'border-red-500' : 'border-gray-300'
               } focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-transparent transition duration-200`}
             />
-            {errors.username && (
+            {errors.email && (
               <span className="text-sm text-red-500 mt-1">
-                {errors.username.message}
+                {errors.email.message}
               </span>
             )}
           </div>

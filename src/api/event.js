@@ -1,4 +1,4 @@
-import { api } from '.';
+import { api } from ".";
 
 export const fetchEvent = async (eventId) => {
   return await api.get(`/event/${eventId}`);
@@ -12,10 +12,14 @@ export const createEvent = async (credentials) => {
   return await api.post(`/event`, credentials);
 };
 
-export const updateEvent = async (id, credentials) => {
-  return await api.put(`/event/${id}`, credentials);
+export const updateEvent = async (eventId, credentials) => {
+  return await api.put(`/event/${eventId}`, credentials);
 };
 
-export const deleteEvent = async (id) => {
-  return await api.delete(`/event/${id}`);
+export const deleteEvent = async (eventId) => {
+  return await api.delete(`/event/${eventId}`);
+};
+
+export const deleteAllEvents = async () => {
+  return await api.delete(`/event`);
 };

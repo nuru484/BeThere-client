@@ -8,9 +8,9 @@ import {
   Eye,
   EyeOff,
   User,
-  Shield,
   IdCard,
   AlertCircle,
+  Phone,
 } from 'lucide-react';
 import schema from '@/validation/signupValidation';
 import PropTypes from 'prop-types';
@@ -19,21 +19,13 @@ const SignupForm = ({ onSubmit, isLoading }) => {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm({ resolver: yupResolver(schema) });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const password = watch('password');
-
-  const togglePasswordVisibility = (field) => {
-    if (field === 'password') {
-      setShowPassword((prev) => !prev);
-    } else {
-      setShowConfirmPassword((prev) => !prev);
-    }
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
   };
 
   return (
@@ -95,6 +87,23 @@ const SignupForm = ({ onSubmit, isLoading }) => {
                 )}
               </div>
             </div>
+
+            {/* <div className="relative">
+              <input
+                type="file"
+                {...register('profilePicture')}
+                accept="image/*"
+                className={`w-full pl-3 pr-3 py-2 rounded-lg border ${
+                  errors.profilePicture ? 'border-red-500' : 'border-gray-300'
+                } focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-transparent transition duration-200`}
+              />
+              {errors.profilePicture && (
+                <span className="text-sm text-red-500 mt-1 flex items-center">
+                  <AlertCircle size={14} className="mr-1" />
+                  {errors.profilePicture.message}
+                </span>
+              )}
+            </div> */}
           </div>
 
           {/* Account Information Section */}
@@ -102,24 +111,6 @@ const SignupForm = ({ onSubmit, isLoading }) => {
             <h3 className="text-sm font-medium text-gray-700 border-b pb-2">
               Account Information
             </h3>
-            <div className="relative">
-              <User className="absolute top-3 left-3 text-gray-400" size={20} />
-              <input
-                type="text"
-                {...register('username')}
-                placeholder="Username"
-                className={`w-full pl-10 pr-3 py-2 rounded-lg border ${
-                  errors.username ? 'border-red-500' : 'border-gray-300'
-                } focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-transparent transition duration-200`}
-              />
-              {errors.username && (
-                <span className="text-sm text-red-500 mt-1 flex items-center">
-                  <AlertCircle size={14} className="mr-1" />
-                  {errors.username.message}
-                </span>
-              )}
-            </div>
-
             <div className="relative">
               <Mail className="absolute top-3 left-3 text-gray-400" size={20} />
               <input
@@ -134,6 +125,24 @@ const SignupForm = ({ onSubmit, isLoading }) => {
                 <span className="text-sm text-red-500 mt-1 flex items-center">
                   <AlertCircle size={14} className="mr-1" />
                   {errors.email.message}
+                </span>
+              )}
+            </div>
+
+            <div className="relative">
+              <Phone className="absolute top-3 left-3 text-gray-400" size={20} />
+              <input
+                type="tel"
+                {...register('phoneNumber')}
+                placeholder="Phone Number"
+                className={`w-full pl-10 pr-3 py-2 rounded-lg border ${
+                  errors.phoneNumber ? 'border-red-500' : 'border-gray-300'
+                } focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-transparent transition duration-200`}
+              />
+              {errors.phoneNumber && (
+                <span className="text-sm text-red-500 mt-1 flex items-center">
+                  <AlertCircle size={14} className="mr-1" />
+                  {errors.phoneNumber.message}
                 </span>
               )}
             </div>
@@ -158,19 +167,14 @@ const SignupForm = ({ onSubmit, isLoading }) => {
                 <EyeOff
                   className="absolute top-3 right-3 text-gray-400 cursor-pointer hover:text-gray-600 transition duration-200"
                   size={20}
-                  onClick={() => togglePasswordVisibility('password')}
+                  onClick={togglePasswordVisibility}
                 />
               ) : (
                 <Eye
                   className="absolute top-3 right-3 text-gray-400 cursor-pointer hover:text-gray-600 transition duration-200"
                   size={20}
-                  onClick={() => togglePasswordVisibility('password')}
+                  onClick={togglePasswordVisibility}
                 />
-              )}
-              {password && (
-                <div className="mt-2">
-                  <div className="flex space-x-1 mb-1"></div>
-                </div>
               )}
               {errors.password && (
                 <span className="text-sm text-red-500 mt-1 flex items-center">
@@ -180,66 +184,10 @@ const SignupForm = ({ onSubmit, isLoading }) => {
               )}
             </div>
 
-            <div className="relative">
-              <Lock className="absolute top-3 left-3 text-gray-400" size={20} />
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                {...register('confirmPassword')}
-                placeholder="Confirm Password"
-                className={`w-full pl-10 pr-10 py-2 rounded-lg border ${
-                  errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-                } focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-transparent transition duration-200`}
-              />
-              {showConfirmPassword ? (
-                <EyeOff
-                  className="absolute top-3 right-3 text-gray-400 cursor-pointer hover:text-gray-600 transition duration-200"
-                  size={20}
-                  onClick={() => togglePasswordVisibility('confirm')}
-                />
-              ) : (
-                <Eye
-                  className="absolute top-3 right-3 text-gray-400 cursor-pointer hover:text-gray-600 transition duration-200"
-                  size={20}
-                  onClick={() => togglePasswordVisibility('confirm')}
-                />
-              )}
-              {errors.confirmPassword && (
-                <span className="text-sm text-red-500 mt-1 flex items-center">
-                  <AlertCircle size={14} className="mr-1" />
-                  {errors.confirmPassword.message}
-                </span>
-              )}
-            </div>
+
           </div>
 
-          {/* Additional Information Section */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium text-gray-700 border-b pb-2">
-              Additional Information
-            </h3>
-            <div className="relative">
-              <Shield
-                className="absolute top-3 left-3 text-gray-400"
-                size={20}
-              />
-              <select
-                {...register('role')}
-                className={`w-full pl-10 pr-3 py-2 rounded-lg border ${
-                  errors.role ? 'border-red-500' : 'border-gray-300'
-                } focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-transparent transition duration-200`}
-              >
-                <option value="">Select Role</option>
-                <option value="ADMIN">Admin</option>
-                <option value="STUDENT">Student</option>
-              </select>
-              {errors.role && (
-                <span className="text-sm text-red-500 mt-1 flex items-center">
-                  <AlertCircle size={14} className="mr-1" />
-                  {errors.role.message}
-                </span>
-              )}
-            </div>
-
+          
             <div className="relative">
               <IdCard
                 className="absolute top-3 left-3 text-gray-400"
@@ -260,7 +208,6 @@ const SignupForm = ({ onSubmit, isLoading }) => {
                 </span>
               )}
             </div>
-          </div>
 
           <div className="pt-2">
             <button
@@ -293,9 +240,13 @@ const SignupForm = ({ onSubmit, isLoading }) => {
     </div>
   );
 };
+
 SignupForm.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   isLoading: PropTypes.bool,
 };
 
 export default SignupForm;
+
+
+  

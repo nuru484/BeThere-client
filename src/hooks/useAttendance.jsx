@@ -1,33 +1,46 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+// src/hooks/useAttendance.jsx
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  markAttendance,
-  fetchUserAttendedEvents,
-  fetchEventAttendance,
-  fetchTotalAttendance,
-} from '@/api/attendance';
+  createAttendance,
+  updateAttendance,
+  getUserAttendance,
+  getEventAttendance,
+  getUserEventAttendance,
+} from "@/api/attendance";
 
-export const useMarkAttendance = () => {
+export const useCreateAttendance = () => {
   const mutation = useMutation({
-    mutationFn: markAttendance,
+    mutationFn: createAttendance,
     onError: (error) => {
-      console.error('Attendance marking failed:', error);
+      console.error("Attendance marking failed:", error);
     },
   });
 
   return mutation;
 };
 
-export const useUserAttendedEvents = (userId) => {
+export const useUpdateAttendance = () => {
+  const mutation = useMutation({
+    mutationFn: updateAttendance,
+    onError: (error) => {
+      console.error("Attendance marking failed:", error);
+    },
+  });
+
+  return mutation;
+};
+
+export const useGetUserAttendance = (userId) => {
   const queryClient = useQueryClient();
 
   const {
-    data: userAttendedEvents,
+    data: userAttendance,
     error,
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ['userAttendedEvents', userId],
-    queryFn: () => fetchUserAttendedEvents(userId),
+    queryKey: ["userAttendance", userId],
+    queryFn: () => getUserAttendance(userId),
     staleTime: 1000 * 60 * 5,
     cacheTime: 1000 * 60 * 30,
     retry: 2,
@@ -35,15 +48,15 @@ export const useUserAttendedEvents = (userId) => {
     refetchOnReconnect: false,
   });
 
-  const refetchUserAttendedEvents = () =>
-    queryClient.invalidateQueries(['userAttendedEvents', userId]);
+  const refetchUserAttendance = () =>
+    queryClient.invalidateQueries(["userAttendance", userId]);
 
   return {
-    userAttendedEvents,
+    userAttendance,
     isLoading,
     isError,
     error,
-    refetchUserAttendedEvents,
+    refetchUserAttendance,
   };
 };
 
@@ -56,8 +69,8 @@ export const useEventAttendance = (eventId) => {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ['eventAttendance', eventId],
-    queryFn: () => fetchEventAttendance(eventId),
+    queryKey: ["eventAttendance", eventId],
+    queryFn: () => getEventAttendance(eventId),
     staleTime: 1000 * 60 * 5,
     cacheTime: 1000 * 60 * 30,
     retry: 2,
@@ -67,7 +80,7 @@ export const useEventAttendance = (eventId) => {
   });
 
   const refetchEventAttendance = () =>
-    queryClient.invalidateQueries(['eventAttendance', eventId]);
+    queryClient.invalidateQueries(["eventAttendance", eventId]);
 
   return {
     eventAttendance,
@@ -78,17 +91,18 @@ export const useEventAttendance = (eventId) => {
   };
 };
 
-export const useTotalAttendance = () => {
+export const useGetUserEventAttendance = (userId, eventId) => {
   const queryClient = useQueryClient();
 
   const {
-    data: totalAttendance,
+    data: userEventAttendance,
     error,
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ['totalAttendance'],
-    queryFn: () => fetchTotalAttendance(),
+    queryKey: ["userEventAttendance", userId, eventId],
+    queryFn: () => getUserEventAttendance(userId, eventId),
+    enabled: !!(userId && eventId),
     staleTime: 1000 * 60 * 5,
     cacheTime: 1000 * 60 * 30,
     retry: 2,
@@ -97,14 +111,14 @@ export const useTotalAttendance = () => {
     refetchOnReconnect: false,
   });
 
-  const refetchTotalAttendance = () =>
-    queryClient.invalidateQueries(['totalAttendance']);
+  const refetchUserEventAttendance = () =>
+    queryClient.invalidateQueries(["userEventAttendance", userId, eventId]);
 
   return {
-    totalAttendance,
+    userEventAttendance,
     isLoading,
     isError,
     error,
-    refetchTotalAttendance,
+    refetchUserEventAttendance,
   };
 };

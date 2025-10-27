@@ -1,28 +1,34 @@
-import { useLogin } from '@/hooks/useAuth';
-import LoginForm from '@/components/LoginForm';
-import encryptStorage from '@/lib/encryptedStorage';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
-import { ClockIcon, CheckCircle, UserCheck, CircleAlert } from 'lucide-react';
+import { useLogin } from "@/hooks/useAuth";
+import LoginForm from "@/components/LoginForm";
+import encryptStorage from "@/lib/encryptedStorage";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useNavigate } from "react-router-dom";
+import { ClockIcon, CheckCircle, UserCheck, CircleAlert } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 
 const LoginPage = () => {
   const { mutate: login, isPending, isError, error } = useLogin();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user, login: logUserIn } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, navigate]);
 
   const onSubmit = async (data) => {
     login(data, {
       onSuccess: (response) => {
-        setIsLoggedIn(true);
-        encryptStorage.setItem('jwtAccessToken', response.accessToken);
-        encryptStorage.setItem('jwtRefreshToken', response.refreshToken);
+        console.log("Login successful:", response);
+        logUserIn(response.user);
+        encryptStorage.setItem("accessToken", response.accessToken);
+        encryptStorage.setItem("refreshToken", response.refreshToken);
+        navigate("/dashboard", { replace: true });
       },
     });
   };
-
-  if (isLoggedIn) {
-    return <Navigate to={`/dashboard`} replace />;
-  }
 
   return (
     <div className="bg-gray-100">
@@ -72,7 +78,7 @@ const LoginPage = () => {
             <div className="flex items-center gap-4">
               <CircleAlert color="#ff0000" />
               <AlertDescription className="text-red-600">
-                {error?.message || 'An unexpected error occurred.'}
+                {error?.message || "An unexpected error occurred."}
               </AlertDescription>
             </div>
           </Alert>

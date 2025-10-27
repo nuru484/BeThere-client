@@ -1,68 +1,83 @@
 //src/routes/index.jsx
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
-import ProtectedRoutes from './ProtectedRoutes';
-import LoginPage from '@/pages/LoginPage';
-import SignupPage from '@/pages/SignupPage';
-import ErrorPage from '@/pages/ErrorPage';
-import Layout from '@/pages/Dashboard';
-import Events from '@/components/event/Events';
-import Event from '@/components/event/Event';
-import CreateEventPage from '@/pages/CreateEventPage';
-import UpdateEventPage from '@/pages/UpdateEventPage';
-import UserEventRegistrations from '@/components/eventRegistration/UserEventRegistrations';
-import QRScanner from '@/components/attendance/ScanQrCode';
-import UserAttendedEvents from '@/components/attendance/UserAttendedEvents';
-import EventAttendanceReports from '@/components/attendance/EventAttendanceReports';
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import ProtectedRoutes from "./ProtectedRoutes";
+import LoginPage from "@/pages/LoginPage";
+import SignupPage from "@/pages/SignupPage";
+import ErrorPage from "@/pages/ErrorPage";
+import Layout from "@/components/Layout";
+import CreateEventPage from "@/pages/CreateEventPage";
+import UpdateEventPage from "@/pages/UpdateEventPage";
+import EventsPage from "@/pages/EventsPage";
+import Event from "@/components/event/Event";
+import AddUserFaceScan from "@/pages/AddUserFaceScan";
+import AttendanceIn from "@/pages/AttendanceIn";
+import AttendanceOut from "@/pages/AttendanceOut";
+import EventAttendancePage from "@/pages/EventAttendancePage";
+import UserAttendancePage from "@/pages/UserAttendancePage";
+import UserEventAttendancePage from "@/pages/UserEventAttendancePage";
+import AdminDashboardPage from "@/pages/AdminDashboardPage";
+import UsersManagementPage from "@/pages/UsersManagementPage";
+import UserIdentificationsPage from "@/pages/UserIdentificationsPage";
 
-// Importing the necessary components for routing
 const Routes = () => {
-  // Routes accessible only to authenticated users
   const protectedRoutes = [
     {
-      path: '/',
+      path: "/",
       element: <ProtectedRoutes />,
       children: [
         {
-          path: '/dashboard',
+          path: "/dashboard",
           element: <Layout />,
           errorElement: <ErrorPage />,
           children: [
+            { index: true, element: <AdminDashboardPage /> },
             {
-              path: '/dashboard/events/create-event',
-              element: <CreateEventPage />,
+              path: "/dashboard/events",
+              element: <EventsPage />,
             },
             {
-              path: '/dashboard/events/update-event/:id',
-              element: <UpdateEventPage />,
-            },
-            {
-              path: '/dashboard/events',
-              element: <Events />,
-            },
-            {
-              path: '/dashboard/events/event/:id',
+              path: "/dashboard/events/:id",
               element: <Event />,
             },
             {
-              path: '/dashboard/registration/registered-events',
-              element: <UserEventRegistrations />,
+              path: "/dashboard/events/create",
+              element: <CreateEventPage />,
             },
             {
-              path: '/dashboard/registration/scan-qr-code',
-              element: <QRScanner />,
-            },
-
-            {
-              path: '/dashboard/attendance/attended-events',
-              element: <UserAttendedEvents />,
+              path: "/dashboard/events/update/:id",
+              element: <UpdateEventPage />,
             },
             {
-              path: '/dashboard/attendance/view-reports',
-              element: <Events />,
+              path: "/dashboard/events/:eventId/attendance",
+              element: <EventAttendancePage />,
             },
             {
-              path: '/dashboard/attendance/event/:eventId/attendance-report',
-              element: <EventAttendanceReports />,
+              path: "/dashboard/attendance/user/:userId/event/:eventId",
+              element: <UserEventAttendancePage />,
+            },
+            {
+              path: "/dashboard/attendance",
+              element: <UserAttendancePage />,
+            },
+            {
+              path: "/dashboard/users",
+              element: <UsersManagementPage />,
+            },
+            {
+              path: "/dashboard/user-identifications",
+              element: <UserIdentificationsPage />,
+            },
+            {
+              path: "/dashboard/add-facescan",
+              element: <AddUserFaceScan />,
+            },
+            {
+              path: "/dashboard/events/:eventId/attendance-in",
+              element: <AttendanceIn />,
+            },
+            {
+              path: "/dashboard/eventS/:eventId/attendance-out",
+              element: <AttendanceOut />,
             },
           ],
         },
@@ -70,21 +85,20 @@ const Routes = () => {
     },
   ];
 
-  // Routes accessible only to non-authenticated users
   const publicRoutes = [
     {
-      path: '/',
+      path: "/",
       element: <LoginPage />,
       errorElement: <ErrorPage />,
     },
 
     {
-      path: '/login',
+      path: "/login",
       element: <LoginPage />,
     },
 
     {
-      path: '/signup',
+      path: "/signup",
       element: <SignupPage />,
     },
   ];

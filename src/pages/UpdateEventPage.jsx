@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useEvent, useUpdateEvent } from '@/hooks/useEvent';
-import EventForm from '@/components/event/EventForm';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useEvent, useUpdateEvent } from "@/hooks/useEvent";
+import EventForm from "@/components/event/EventForm";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogAction,
   AlertDialogDescription,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 
 const UpdateEventPage = () => {
   const { id } = useParams();
@@ -24,7 +24,7 @@ const UpdateEventPage = () => {
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
 
-  const { Attendance, Registration, ...eventData } = event?.data || {};
+  const { ...eventData } = event?.data || {};
 
   const onSubmit = async (data) => {
     updateEvent(
@@ -39,7 +39,7 @@ const UpdateEventPage = () => {
   };
 
   const handleRedirect = () => {
-    navigate(`/dashboard/event/${id}`);
+    navigate(`/dashboard/events/${id}`);
   };
 
   if (isLoading || !event.data) {
@@ -54,7 +54,7 @@ const UpdateEventPage = () => {
           isLoading={isPending}
           defaultValues={eventData}
           onCancel={() => {
-            navigate(`/dashboard/event/${id}`);
+            navigate(`/dashboard/events/${id}`);
           }}
         />
       </div>

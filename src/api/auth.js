@@ -1,21 +1,13 @@
-import { api } from '.';
-
-export const fetchUser = async () => {
-  return await api.get('/auth/user', {});
-};
+import { api } from ".";
 
 export const refreshTokenApi = async () => {
-  return await api.post('/refreshToken');
+  return await api.post("/refreshToken");
 };
 
 export const login = async (credentials) => {
-  return await api.post('/auth/login', credentials);
+  return await api.post("/auth/login", credentials);
 };
 
 export const signup = async (credentials) => {
-  return await api.post('/register', credentials);
-};
-
-export const logout = async () => {
-  return await api.post('/auth/logout');
+  return await api.post("/auth/signup", credentials);
 };
