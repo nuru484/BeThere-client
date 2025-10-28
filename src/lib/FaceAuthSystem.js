@@ -12,7 +12,6 @@ export class FaceAuthSystem {
       }),
       useFaceLandmarks: true,
       samplesForRegistration: 3,
-      quantizationLevels: 32,
       ...options,
     };
 
@@ -61,35 +60,6 @@ export class FaceAuthSystem {
     }
   }
 
-  normalizeDescriptor(descriptor) {
-    const norm = Math.sqrt(descriptor.reduce((sum, val) => sum + val * val, 0));
-    return Float32Array.from(descriptor.map((val) => val / (norm || 1)));
-  }
-
-  quantizeDescriptor(descriptor) {
-    const levels = this.config.quantizationLevels;
-    const min = -1;
-    const max = 1;
-    const binSize = (max - min) / levels;
-
-    return Float32Array.from(descriptor, (value) => {
-      const bin = Math.floor((value - min) / binSize);
-      return (
-        (Math.min(levels - 1, Math.max(0, bin)) / (levels - 1)) * (max - min) +
-        min
-      );
-    });
-  }
-
-  createFuzzyHash(descriptor) {
-    const mean =
-      Array.from(descriptor).reduce((sum, val) => sum + val, 0) /
-      descriptor.length;
-    return Array.from(descriptor)
-      .map((val) => (val > mean ? 1 : 0))
-      .join("");
-  }
-
   async scanFace(imageSources) {
     if (!this.modelsLoaded) {
       return {
@@ -131,15 +101,10 @@ export class FaceAuthSystem {
           descriptors.reduce((sum, d) => sum + d[i], 0) / descriptors.length;
       }
 
-      // Generate fuzzy hash
-      const normalizedDescriptor = this.normalizeDescriptor(avgDescriptor);
-      const quantizedDescriptor = this.quantizeDescriptor(normalizedDescriptor);
-      const fuzzyHash = this.createFuzzyHash(quantizedDescriptor);
-
       return {
         success: true,
         message: "Face scanned successfully",
-        fuzzyHash,
+        descriptor: Array.from(avgDescriptor),
       };
     } catch (error) {
       console.error("Error during face scanning:", error);
@@ -150,26 +115,29 @@ export class FaceAuthSystem {
     }
   }
 
-  verifyFaceScan(fuzzyHash1, fuzzyHash2) {
+  verifyFaceScan(descriptor1, descriptor2) {
     try {
       if (
-        !fuzzyHash1 ||
-        !fuzzyHash2 ||
-        fuzzyHash1.length !== fuzzyHash2.length
+        !descriptor1 ||
+        !descriptor2 ||
+        descriptor1.length !== descriptor2.length ||
+        descriptor1.length !== 128
       ) {
         return {
           success: false,
-          message: "Invalid fuzzy hashes provided for comparison",
+          message: "Invalid descriptors provided for comparison",
         };
       }
 
-      // Calculate Hamming distance
-      const hammingDistance = fuzzyHash1
-        .split("")
-        .reduce((diff, bit, i) => diff + (bit !== fuzzyHash2[i] ? 1 : 0), 0);
+      // Calculate Euclidean distance
+      const euclideanDistance = Math.sqrt(
+        descriptor1.reduce(
+          (sum, val, i) => sum + Math.pow(val - descriptor2[i], 2),
+          0
+        )
+      );
 
-      const maxHammingDistance = 15;
-      const isMatch = hammingDistance <= maxHammingDistance;
+      const isMatch = euclideanDistance <= this.config.distanceThreshold;
 
       return {
         success: true,
@@ -177,7 +145,7 @@ export class FaceAuthSystem {
         message: isMatch
           ? "Face scan verified successfully"
           : "Face scan does not match",
-        hammingDistance,
+        distance: euclideanDistance,
       };
     } catch (error) {
       console.error("Error in face scan verification:", error);
