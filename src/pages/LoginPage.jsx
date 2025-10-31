@@ -7,8 +7,10 @@ import { useNavigate } from "react-router-dom";
 import { CheckCircle, UserCheck, CircleAlert } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const LoginPage = () => {
+  usePageTitle("Login");
   const { mutate: login, isPending, isError, error } = useLogin();
   const { user, login: logUserIn } = useAuth();
   const navigate = useNavigate();

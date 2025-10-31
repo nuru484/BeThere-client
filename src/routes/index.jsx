@@ -2,7 +2,6 @@
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import ProtectedRoutes from "./ProtectedRoutes";
 import LoginPage from "@/pages/LoginPage";
-import SignupPage from "@/pages/SignupPage";
 import ErrorPage from "@/pages/ErrorPage";
 import Layout from "@/components/Layout";
 import CreateEventPage from "@/pages/CreateEventPage";
@@ -95,11 +94,6 @@ const Routes = () => {
     {
       path: "/login",
       element: <LoginPage />,
-    },
-
-    {
-      path: "/signup",
-      element: <SignupPage />,
     },
   ];
 
