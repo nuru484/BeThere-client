@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   CalendarCheck2,
   UserRoundPen,
@@ -6,24 +6,17 @@ import {
   Users,
   LogOut,
   ScanFace,
+  Menu,
+  X,
 } from "lucide-react";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarFooter,
-  SidebarHeader,
-} from "@/components/ui/sidebar";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth, useLogout } from "@/hooks/useAuth";
 
 const getMenuItems = (user) => {
   const isAdmin = user?.role === "ADMIN";
   const shouldShowFaceScan = user?.faceScan === null && !isAdmin;
+
+  console.log("User face scan:", user?.faceScan);
 
   return [
     {
@@ -38,7 +31,6 @@ const getMenuItems = (user) => {
       url: "events",
       path: "/dashboard/events",
     },
-    // Attendance (only for non-admins)
     ...(!isAdmin
       ? [
           {
@@ -49,7 +41,6 @@ const getMenuItems = (user) => {
           },
         ]
       : []),
-    // Face Scan (only if not set and not admin)
     ...(shouldShowFaceScan
       ? [
           {
@@ -60,7 +51,6 @@ const getMenuItems = (user) => {
           },
         ]
       : []),
-    // Users (only for admins)
     ...(isAdmin
       ? [
           {
@@ -74,83 +64,129 @@ const getMenuItems = (user) => {
   ];
 };
 
-export function AppSidebar() {
+export function AppNavbar() {
   const { user } = useAuth();
   const location = useLocation();
   const items = React.useMemo(() => getMenuItems(user), [user]);
   const logout = useLogout();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const isActiveTab = (item) => {
     return location.pathname === item.path;
   };
 
+  const handleNavClick = () => {
+    setIsMenuOpen(false);
+  };
+
   return (
-    <Sidebar className="border-r border-emerald-200 bg-emerald-50">
-      <SidebarHeader className="border-b border-emerald-200 bg-emerald-600">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              className="font-bold text-white hover:bg-emerald-700 hover:text-white transition-colors"
-              aria-label="QR Code Attendance Menu"
-              tabIndex={0}
-            >
+    <nav className="bg-emerald-600 shadow-lg sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo/Brand */}
+          <div className="flex items-center">
+            <span className="text-white font-bold text-lg md:text-xl">
               QR CODE ATTENDANCE
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
+            </span>
+          </div>
 
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.map((item) => {
-                const isActive = isActiveTab(item);
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <NavLink
-                      to={
-                        item.url === ""
-                          ? "/dashboard"
-                          : `/dashboard/${item.url}`
-                      }
-                    >
-                      <SidebarMenuButton
-                        className={`w-full flex items-center transition-colors ${
-                          isActive
-                            ? "bg-emerald-100 text-emerald-900 font-semibold"
-                            : "hover:bg-emerald-100 text-emerald-700"
-                        }`}
-                      >
-                        <item.icon className="mr-2 h-4 w-4 text-emerald-600" />
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
-                    </NavLink>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex md:items-center md:space-x-1">
+            {items.map((item) => {
+              const isActive = isActiveTab(item);
+              return (
+                <NavLink
+                  key={item.title}
+                  to={item.url === "" ? "/dashboard" : `/dashboard/${item.url}`}
+                >
+                  <button
+                    className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isActive
+                        ? "bg-emerald-700 text-white"
+                        : "text-emerald-100 hover:bg-emerald-700 hover:text-white"
+                    }`}
+                  >
+                    <item.icon className="mr-2 h-4 w-4" />
+                    <span>{item.title}</span>
+                  </button>
+                </NavLink>
+              );
+            })}
 
-      <SidebarFooter className="border-t border-emerald-200 bg-emerald-600">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
+            {/* Logout Button - Desktop */}
+            <button
               onClick={logout}
-              className="w-full text-white hover:bg-red-600 transition-colors cursor-pointer"
+              className="flex items-center px-4 py-2 rounded-md text-sm font-medium text-emerald-100 hover:bg-red-600 hover:text-white transition-colors ml-2"
               aria-label="Logout"
-              tabIndex={0}
             >
               <LogOut className="mr-2 h-4 w-4" />
               <span>Logout</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
-    </Sidebar>
+            </button>
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="inline-flex items-center justify-center p-2 rounded-md text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+              aria-expanded={isMenuOpen}
+              aria-label="Toggle menu"
+            >
+              {isMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Navigation Menu - Slides down */}
+      <div
+        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+          isMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="px-2 pt-2 pb-3 space-y-1 bg-emerald-700">
+          {items.map((item) => {
+            const isActive = isActiveTab(item);
+            return (
+              <NavLink
+                key={item.title}
+                to={item.url === "" ? "/dashboard" : `/dashboard/${item.url}`}
+                onClick={handleNavClick}
+              >
+                <button
+                  className={`w-full flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                    isActive
+                      ? "bg-emerald-800 text-white"
+                      : "text-emerald-100 hover:bg-emerald-800 hover:text-white"
+                  }`}
+                >
+                  <item.icon className="mr-3 h-5 w-5" />
+                  <span>{item.title}</span>
+                </button>
+              </NavLink>
+            );
+          })}
+
+          {/* Logout Button - Mobile */}
+          <button
+            onClick={() => {
+              handleNavClick();
+              logout();
+            }}
+            className="w-full flex items-center px-3 py-2 rounded-md text-base font-medium text-emerald-100 hover:bg-red-600 hover:text-white transition-colors"
+            aria-label="Logout"
+          >
+            <LogOut className="mr-3 h-5 w-5" />
+            <span>Logout</span>
+          </button>
+        </div>
+      </div>
+    </nav>
   );
 }
 
-export default AppSidebar;
+export default AppNavbar;
