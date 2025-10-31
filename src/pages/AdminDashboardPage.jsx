@@ -18,8 +18,11 @@ import {
   useGetTodayAttendance,
   useGetRecentActivity,
 } from "@/hooks/useDashboard";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const AdminDashboardPage = () => {
+  usePageTitle("Dashboard");
+
   const {
     totalUsers,
     isLoading: usersLoading,
