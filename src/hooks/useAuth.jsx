@@ -20,9 +20,9 @@ export const useLogin = () => {
     onSuccess: () => {
       console.log("login success.");
     },
-    onError: (error) => {
-      console.error("Login failed:", error);
-    },
+    // onError: (error) => {
+    //   console.error("Login failed:", error);
+    // },
   });
 
   return mutation;

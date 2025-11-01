@@ -1,19 +1,31 @@
-// LoginPage.jsx
+// src/pages/LoginPage.jsx
 import { useLogin } from "@/hooks/useAuth";
 import LoginForm from "@/components/LoginForm";
 import encryptStorage from "@/lib/encryptedStorage";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle, UserCheck, CircleAlert } from "lucide-react";
+import { CheckCircle, UserCheck } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import toast from "react-hot-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginFormSchema } from "@/validation/login-validation";
+import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
 
 const LoginPage = () => {
   usePageTitle("Login");
-  const { mutate: login, isPending, isError, error } = useLogin();
+  const { mutate: login, isPending } = useLogin();
   const { user, login: logUserIn } = useAuth();
   const navigate = useNavigate();
+
+  const form = useForm({
+    resolver: zodResolver(loginFormSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
   useEffect(() => {
     if (user) {
@@ -24,10 +36,31 @@ const LoginPage = () => {
   const onSubmit = async (data) => {
     login(data, {
       onSuccess: (response) => {
+        toast.success("Login Successful");
         logUserIn(response.user);
         encryptStorage.setItem("accessToken", response.accessToken);
         encryptStorage.setItem("refreshToken", response.refreshToken);
         navigate("/dashboard", { replace: true });
+      },
+
+      onError: (err) => {
+        console.error("Login error:", err);
+
+        const { message, fieldErrors, hasFieldErrors } =
+          extractApiErrorMessage(err);
+
+        if (hasFieldErrors && fieldErrors) {
+          Object.entries(fieldErrors).forEach(([field, errorMessage]) => {
+            console.log("Setting field error:", field, errorMessage);
+            form.setError(field, {
+              message: errorMessage,
+            });
+          });
+        }
+
+        if (!hasFieldErrors || message) {
+          toast.error(message || "Login failed. Please try again.");
+        }
       },
     });
   };
@@ -104,20 +137,7 @@ const LoginPage = () => {
 
       {/* Right Side - Login Form */}
       <div className="flex-1 flex items-center justify-center p-6 lg:p-12 relative">
-        <LoginForm onSubmit={onSubmit} isLoading={isPending} />
-
-        {/* Error Alert */}
-        {isError && (
-          <Alert className="max-w-md border-l-4 border-red-500 bg-red-50 fixed top-8 left-1/2 -translate-x-1/2 animate-shake shadow-lg">
-            <div className="flex items-start">
-              <CircleAlert className="h-5 w-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" />
-              <AlertDescription className="text-sm font-medium text-red-800">
-                {error?.message ||
-                  "An unexpected error occurred. Please try again."}
-              </AlertDescription>
-            </div>
-          </Alert>
-        )}
+        <LoginForm form={form} onSubmit={onSubmit} isLoading={isPending} />
       </div>
     </div>
   );
