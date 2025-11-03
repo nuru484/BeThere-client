@@ -226,7 +226,7 @@ Please ensure your code follows the project's style guidelines and includes appr
 
 For major changes, please open an issue first to discuss what you would like to change.
 
-📩 Questions or suggestions?
+Questions or suggestions?
 **[abdulmajeednurudeen47@gmail.com](mailto:abdulmajeednurudeen47@gmail.com)**
 
 ---
@@ -259,9 +259,11 @@ SOFTWARE.
 
 ## 🧠 Author
 
-**Developer:** Nurudeen Abdul-Majeed
-📧 **Email:** [abdulmajeednurudeen47@gmail.com](mailto:abdulmajeednurudeen47@gmail.com)
-🌐 **Backend API:** [BeThere Backend](https://github.com/nuru484/BeThere-server.git)
+**Developer:** Nurudeen Abdul-Majeed  
+
+**Email:** [abdulmajeednurudeen47@gmail.com](mailto:abdulmajeednurudeen47@gmail.com)  
+
+**Backend API:** [BeThere Backend](https://github.com/nuru484/BeThere-server.git)
 
 ---
 
