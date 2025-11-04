@@ -2,95 +2,141 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getUsers,
+  getUserById,
+  addUser,
   updateUser,
   deleteUser,
+  deleteAllUsers,
   updateUserRole,
-  getUserIdentifications,
-  createUserIdentification,
 } from "@/api/users";
-import { toast } from "sonner";
 
-export const useGetUsers = (params = {}) => {
+// Get all users with pagination and filters
+export const useGetAllUsers = (params = {}) => {
+  const queryKey = ["users", params];
+
   return useQuery({
-    queryKey: ["users", params],
+    queryKey,
     queryFn: () => getUsers(params),
     staleTime: 1000 * 60 * 5,
     retry: 2,
+    keepPreviousData: true,
   });
 };
 
+// Get single user by ID
+export const useGetUser = (userId, options = {}) => {
+  return useQuery({
+    queryKey: ["user", userId],
+    queryFn: () => getUserById(userId),
+    staleTime: 1000 * 60 * 5,
+    retry: 2,
+    enabled: !!userId,
+    ...options,
+  });
+};
+
+// Create/Add new user
+export const useAddUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userData) => addUser(userData),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["users"]);
+    },
+  });
+};
+
+// Update user profile
 export const useUpdateUser = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ userId, userData }) => updateUser(userId, userData),
-    onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries(["users"]);
+    onSuccess: (data, { userId }) => {
       queryClient.invalidateQueries(["user", userId]);
-      toast.success("User updated successfully!");
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || "Failed to update user");
-    },
-  });
-};
-
-export const useDeleteUser = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: deleteUser,
-    onSuccess: () => {
       queryClient.invalidateQueries(["users"]);
-      toast.success("User deleted successfully!");
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || "Failed to delete user");
     },
   });
 };
 
+// Update user role
 export const useUpdateUserRole = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ userId, role }) => updateUserRole(userId, role),
-    onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries(["users"]);
+    onSuccess: (data, { userId }) => {
       queryClient.invalidateQueries(["user", userId]);
-      toast.success("User role updated successfully!");
-    },
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.message || "Failed to update user role"
-      );
+      queryClient.invalidateQueries(["users"]);
     },
   });
 };
 
-export const useGetUserIdentifications = (params = {}) => {
-  return useQuery({
-    queryKey: ["userIdentifications", params],
-    queryFn: () => getUserIdentifications(params),
-    staleTime: 1000 * 60 * 5,
-    retry: 2,
-  });
-};
-
-export const useCreateUserIdentification = () => {
+// Delete single user
+export const useDeleteUser = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: createUserIdentification,
-    onSuccess: () => {
-      queryClient.invalidateQueries(["userIdentifications"]);
+    mutationFn: (userId) => deleteUser(userId),
+    onSuccess: (data, userId) => {
+      queryClient.removeQueries(["user", userId]);
       queryClient.invalidateQueries(["users"]);
-      toast.success("User identification created successfully!");
-    },
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.message || "Failed to create identification"
-      );
     },
   });
+};
+
+// Delete all users
+export const useDeleteAllUsers = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (confirmData) => deleteAllUsers(confirmData),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["users"]);
+      queryClient.removeQueries(["user"]);
+    },
+  });
+};
+
+export const useSearchUsers = (searchParams = {}) => {
+  const queryKey = ["users", "search", searchParams];
+
+  return useQuery({
+    queryKey,
+    queryFn: () => getUsers(searchParams),
+    staleTime: 1000 * 60 * 3,
+    retry: 2,
+    keepPreviousData: true,
+    enabled: !!searchParams.search,
+  });
+};
+
+export const useLazyGetAllUsers = () => {
+  const queryClient = useQueryClient();
+
+  return {
+    fetch: (params = {}) =>
+      queryClient.fetchQuery({
+        queryKey: ["users", params],
+        queryFn: () => getUsers(params),
+      }),
+    prefetch: (params = {}) =>
+      queryClient.prefetchQuery({
+        queryKey: ["users", params],
+        queryFn: () => getUsers(params),
+      }),
+  };
+};
+
+export const useLazySearchUsers = () => {
+  const queryClient = useQueryClient();
+
+  return {
+    fetch: (searchParams = {}) =>
+      queryClient.fetchQuery({
+        queryKey: ["users", "search", searchParams],
+        queryFn: () => getUsers(searchParams),
+      }),
+  };
 };

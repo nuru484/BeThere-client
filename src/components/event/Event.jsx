@@ -1,8 +1,7 @@
 // src/components/Event.jsx
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useDeleteEvent } from "@/hooks/useEvent";
+import { useDeleteEvent, useGetEvent } from "@/hooks/useEvent";
 import {
   Calendar,
   MapPin,
@@ -16,24 +15,31 @@ import {
   Users,
   Clock,
   Globe,
+  AlertCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import PropTypes from "prop-types";
+import { useState } from "react";
 
-const Event = ({ event, onBack }) => {
+const Event = ({ onBack }) => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const { user } = useAuth();
-  const { mutate: deleteEvent, isPending } = useDeleteEvent();
+  const { mutate: deleteEvent, isPending: isDeleting } = useDeleteEvent();
+  const { event: eventData, isLoading, isError, error } = useGetEvent(id);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const isAdmin = user?.role === "ADMIN";
 
+  const event = eventData?.data;
+
   const handleDelete = () => {
-    deleteEvent({ id: event.id });
+    deleteEvent({ id: id });
     if (onBack) {
       onBack();
     } else {
@@ -43,15 +49,15 @@ const Event = ({ event, onBack }) => {
   };
 
   const handleClockIn = () => {
-    navigate(`/dashboard/events/${event.id}/attendance-in`);
+    navigate(`/dashboard/events/${id}/attendance-in`);
   };
 
   const handleClockOut = () => {
-    navigate(`/dashboard/events/${event.id}/attendance-out`);
+    navigate(`/dashboard/events/${id}/attendance-out`);
   };
 
   const handleViewAttendance = () => {
-    navigate(`/dashboard/events/${event.id}/attendance`);
+    navigate(`/dashboard/events/${id}/attendance`);
   };
 
   const handleBack = () => {
@@ -75,7 +81,7 @@ const Event = ({ event, onBack }) => {
   const formatTime = (time) => time || "Not specified";
 
   const formatRecurrenceInfo = () => {
-    if (!event.isRecurring) return null;
+    if (!event?.isRecurring) return null;
 
     const interval = event.recurrenceInterval || 1;
     const intervalText = interval === 1 ? "day" : `${interval} days`;
@@ -83,7 +89,8 @@ const Event = ({ event, onBack }) => {
     return `Every ${intervalText}`;
   };
 
-  if (isPending) {
+  // Loading State
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-6xl mx-auto px-4">
@@ -97,6 +104,53 @@ const Event = ({ event, onBack }) => {
                   <div className="h-32 bg-gray-200 rounded"></div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Error State
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-6xl mx-auto px-4">
+          <Card className="shadow-sm border-0">
+            <CardContent className="p-8">
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {error?.response?.data?.message ||
+                    "Failed to load event. Please try again."}
+                </AlertDescription>
+              </Alert>
+              <Button variant="outline" className="mt-4" onClick={handleBack}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Events
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // No event data
+  if (!event) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-6xl mx-auto px-4">
+          <Card className="shadow-sm border-0">
+            <CardContent className="p-8">
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>Event not found.</AlertDescription>
+              </Alert>
+              <Button variant="outline" className="mt-4" onClick={handleBack}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Events
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -178,9 +232,10 @@ const Event = ({ event, onBack }) => {
                       size="sm"
                       className="bg-red-600 hover:bg-red-700"
                       onClick={() => setDeleteDialogOpen(true)}
+                      disabled={isDeleting}
                     >
                       <Trash className="w-4 h-4 mr-2" />
-                      Delete
+                      {isDeleting ? "Deleting..." : "Delete"}
                     </Button>
                   </div>
                 </>
@@ -411,9 +466,10 @@ const Event = ({ event, onBack }) => {
                       variant="destructive"
                       className="w-full justify-start"
                       onClick={() => setDeleteDialogOpen(true)}
+                      disabled={isDeleting}
                     >
                       <Trash className="w-4 h-4 mr-3" />
-                      Delete Event
+                      {isDeleting ? "Deleting..." : "Delete Event"}
                     </Button>
                   </>
                 )}
@@ -440,26 +496,6 @@ const Event = ({ event, onBack }) => {
 };
 
 Event.propTypes = {
-  event: PropTypes.shape({
-    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-    title: PropTypes.string.isRequired,
-    description: PropTypes.string,
-    startDate: PropTypes.string.isRequired,
-    endDate: PropTypes.string,
-    startTime: PropTypes.string.isRequired,
-    endTime: PropTypes.string.isRequired,
-    type: PropTypes.string.isRequired,
-    isRecurring: PropTypes.bool,
-    recurrenceInterval: PropTypes.number,
-    durationDays: PropTypes.number,
-    location: PropTypes.shape({
-      name: PropTypes.string,
-      latitude: PropTypes.number,
-      longitude: PropTypes.number,
-      city: PropTypes.string,
-      country: PropTypes.string,
-    }),
-  }).isRequired,
   onBack: PropTypes.func,
 };
 
