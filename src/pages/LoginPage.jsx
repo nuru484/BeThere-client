@@ -37,6 +37,7 @@ const LoginPage = () => {
     login(data, {
       onSuccess: (response) => {
         toast.success("Login Successful");
+        console.log("Login Response: ", response);
         logUserIn(response.user);
         encryptStorage.setItem("accessToken", response.accessToken);
         encryptStorage.setItem("refreshToken", response.refreshToken);
@@ -44,8 +45,6 @@ const LoginPage = () => {
       },
 
       onError: (err) => {
-        console.error("Login error:", err);
-
         const { message, fieldErrors, hasFieldErrors } =
           extractApiErrorMessage(err);
 

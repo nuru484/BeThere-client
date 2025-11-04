@@ -1,6 +1,6 @@
+// src/components/Event.jsx
 import { useState } from "react";
-import { useEvent } from "@/hooks/useEvent";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useDeleteEvent } from "@/hooks/useEvent";
 import {
@@ -22,10 +22,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import PropTypes from "prop-types";
 
-const Event = () => {
-  const { id } = useParams();
-  const { event, isLoading, isError, error } = useEvent(id);
+const Event = ({ event, onBack }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { mutate: deleteEvent, isPending } = useDeleteEvent();
@@ -33,25 +32,58 @@ const Event = () => {
 
   const isAdmin = user?.role === "ADMIN";
 
-  const handleDelete = async () => {
-    deleteEvent({ id });
-    navigate("/dashboard/events");
+  const handleDelete = () => {
+    deleteEvent({ id: event.id });
+    if (onBack) {
+      onBack();
+    } else {
+      navigate("/dashboard/events");
+    }
     setDeleteDialogOpen(false);
   };
 
   const handleClockIn = () => {
-    navigate(`/dashboard/events/${id}/attendance-in`);
+    navigate(`/dashboard/events/${event.id}/attendance-in`);
   };
 
   const handleClockOut = () => {
-    navigate(`/dashboard/events/${id}/attendance-out`);
+    navigate(`/dashboard/events/${event.id}/attendance-out`);
   };
 
   const handleViewAttendance = () => {
-    navigate(`/dashboard/events/${id}/attendance`);
+    navigate(`/dashboard/events/${event.id}/attendance`);
   };
 
-  if (isLoading || isPending) {
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      navigate("/dashboard/events");
+    }
+  };
+
+  const formatDate = (date) =>
+    date
+      ? new Date(date).toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
+      : "Not specified";
+
+  const formatTime = (time) => time || "Not specified";
+
+  const formatRecurrenceInfo = () => {
+    if (!event.isRecurring) return null;
+
+    const interval = event.recurrenceInterval || 1;
+    const intervalText = interval === 1 ? "day" : `${interval} days`;
+
+    return `Every ${intervalText}`;
+  };
+
+  if (isPending) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-6xl mx-auto px-4">
@@ -72,53 +104,6 @@ const Event = () => {
     );
   }
 
-  if (isError) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-6xl mx-auto px-4">
-          <Card className="shadow-sm border-0">
-            <CardContent className="p-8 text-center">
-              <div className="text-red-600 mb-4 text-lg">{error?.message}</div>
-              <Button
-                variant="outline"
-                className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                onClick={() => navigate("/dashboard")}
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Dashboard
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  const {
-    title,
-    description,
-    startDate,
-    endDate,
-    startTime,
-    endTime,
-    location,
-    type,
-    isRecurring,
-    recurrenceRule,
-  } = event?.data || {};
-
-  const formatDate = (date) =>
-    date
-      ? new Date(date).toLocaleDateString("en-US", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })
-      : "Not specified";
-
-  const formatTime = (time) => time || "Not specified";
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -128,7 +113,7 @@ const Event = () => {
             <Button
               variant="ghost"
               className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-              onClick={() => navigate("/dashboard/events")}
+              onClick={handleBack}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Events
@@ -181,7 +166,9 @@ const Event = () => {
                       variant="outline"
                       size="sm"
                       className="border-gray-200 text-gray-700 hover:bg-gray-50"
-                      onClick={() => navigate(`/dashboard/events/update/${id}`)}
+                      onClick={() =>
+                        navigate(`/dashboard/events/update/${event.id}`)
+                      }
                     >
                       <Pencil className="w-4 h-4 mr-2" />
                       Edit
@@ -214,21 +201,21 @@ const Event = () => {
                 <div className="mb-8">
                   <div className="flex items-start justify-between mb-4">
                     <h1 className="text-3xl font-bold text-gray-900 leading-tight">
-                      {title}
+                      {event.title}
                     </h1>
                     <Badge
                       variant="secondary"
                       className="bg-emerald-100 text-emerald-800 px-3 py-1.5 font-medium"
                     >
                       <Tag className="w-3 h-3 mr-1.5" />
-                      {type}
+                      {event.type}
                     </Badge>
                   </div>
 
-                  {description && (
+                  {event.description && (
                     <div className="prose prose-gray max-w-none">
                       <p className="text-gray-600 text-lg leading-relaxed">
-                        {description}
+                        {event.description}
                       </p>
                     </div>
                   )}
@@ -254,35 +241,50 @@ const Event = () => {
                               Start:
                             </span>
                             <span className="text-gray-900">
-                              {formatDate(startDate)}
+                              {formatDate(event.startDate)}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 text-sm">
                             <Clock className="w-3 h-3 text-gray-400" />
                             <span className="text-gray-600">
-                              {formatTime(startTime)}
+                              {formatTime(event.startTime)}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <span className="font-medium text-gray-500 w-12">
-                              End:
-                            </span>
-                            <span className="text-gray-900">
-                              {formatDate(endDate)}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <Clock className="w-3 h-3 text-gray-400" />
-                            <span className="text-gray-600">
-                              {formatTime(endTime)}
-                            </span>
-                          </div>
+                          {event.endDate && (
+                            <>
+                              <div className="flex items-center gap-2 text-sm">
+                                <span className="font-medium text-gray-500 w-12">
+                                  End:
+                                </span>
+                                <span className="text-gray-900">
+                                  {formatDate(event.endDate)}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm">
+                                <Clock className="w-3 h-3 text-gray-400" />
+                                <span className="text-gray-600">
+                                  {formatTime(event.endTime)}
+                                </span>
+                              </div>
+                            </>
+                          )}
+                          {event.durationDays && (
+                            <div className="flex items-center gap-2 text-sm mt-2 pt-2 border-t border-gray-100">
+                              <span className="font-medium text-gray-500">
+                                Duration:
+                              </span>
+                              <span className="text-gray-600">
+                                {event.durationDays}{" "}
+                                {event.durationDays === 1 ? "day" : "days"}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
 
                     {/* Recurrence */}
-                    {isRecurring && recurrenceRule && (
+                    {event.isRecurring && (
                       <div className="flex items-start gap-4">
                         <div className="p-2 bg-teal-100 rounded-lg">
                           <Repeat className="w-5 h-5 text-teal-600" />
@@ -292,8 +294,14 @@ const Event = () => {
                             Recurrence
                           </h3>
                           <p className="text-gray-600 text-sm">
-                            Repeats: {recurrenceRule}
+                            {formatRecurrenceInfo()}
                           </p>
+                          {event.recurrenceInterval && (
+                            <p className="text-gray-500 text-xs mt-1">
+                              Interval: {event.recurrenceInterval}{" "}
+                              {event.recurrenceInterval === 1 ? "day" : "days"}
+                            </p>
+                          )}
                         </div>
                       </div>
                     )}
@@ -311,25 +319,28 @@ const Event = () => {
                         </h3>
                         <div className="space-y-2">
                           <p className="font-medium text-gray-900">
-                            {location?.name}
+                            {event.location?.name || "No location specified"}
                           </p>
-                          {(location?.city || location?.country) && (
+                          {(event.location?.city ||
+                            event.location?.country) && (
                             <div className="flex items-center gap-1 text-sm text-gray-600">
                               <Globe className="w-3 h-3" />
                               <span>
-                                {location?.city}
-                                {location?.city && location?.country
+                                {event.location.city}
+                                {event.location.city && event.location.country
                                   ? ", "
                                   : ""}
-                                {location?.country}
+                                {event.location.country}
                               </span>
                             </div>
                           )}
-                          {location?.latitude && location?.longitude && (
-                            <p className="text-xs text-gray-500 font-mono">
-                              {location.latitude}, {location.longitude}
-                            </p>
-                          )}
+                          {event.location?.latitude &&
+                            event.location?.longitude && (
+                              <p className="text-xs text-gray-500 font-mono">
+                                {event.location.latitude},{" "}
+                                {event.location.longitude}
+                              </p>
+                            )}
                         </div>
                       </div>
                     </div>
@@ -388,7 +399,9 @@ const Event = () => {
                     <Button
                       variant="outline"
                       className="w-full justify-start border-gray-200 text-gray-700 hover:bg-gray-50"
-                      onClick={() => navigate(`/dashboard/events/update/${id}`)}
+                      onClick={() =>
+                        navigate(`/dashboard/events/update/${event.id}`)
+                      }
                     >
                       <Pencil className="w-4 h-4 mr-3" />
                       Edit Event
@@ -424,6 +437,30 @@ const Event = () => {
       />
     </div>
   );
+};
+
+Event.propTypes = {
+  event: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    title: PropTypes.string.isRequired,
+    description: PropTypes.string,
+    startDate: PropTypes.string.isRequired,
+    endDate: PropTypes.string,
+    startTime: PropTypes.string.isRequired,
+    endTime: PropTypes.string.isRequired,
+    type: PropTypes.string.isRequired,
+    isRecurring: PropTypes.bool,
+    recurrenceInterval: PropTypes.number,
+    durationDays: PropTypes.number,
+    location: PropTypes.shape({
+      name: PropTypes.string,
+      latitude: PropTypes.number,
+      longitude: PropTypes.number,
+      city: PropTypes.string,
+      country: PropTypes.string,
+    }),
+  }).isRequired,
+  onBack: PropTypes.func,
 };
 
 export default Event;

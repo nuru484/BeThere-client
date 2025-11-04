@@ -3,7 +3,6 @@ import { createContext, useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import encryptStorage from "@/lib/encryptedStorage";
 
-// Create the Auth Context
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -11,7 +10,6 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Initialize user from localStorage
     const initializeAuth = () => {
       try {
         setIsLoading(true);
@@ -23,7 +21,7 @@ export const AuthProvider = ({ children }) => {
         }
       } catch (error) {
         console.error("Error initializing auth:", error);
-        // Clear potentially corrupted data
+
         localStorage.removeItem("user");
         encryptStorage.removeItem("accessToken");
         encryptStorage.removeItem("refreshToken");
@@ -63,7 +61,6 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// PropTypes for AuthProvider
 AuthProvider.propTypes = {
   children: PropTypes.node.isRequired,
 };

@@ -1,13 +1,13 @@
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import {
   fetchEvent,
   fetchEvents,
   createEvent,
   updateEvent,
   deleteEvent,
-} from '@/api/event';
+} from "@/api/event";
 
-export const useEvent = (eventId) => {
+export const useGetEvent = (eventId) => {
   const queryClient = useQueryClient();
 
   const {
@@ -16,7 +16,7 @@ export const useEvent = (eventId) => {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ['event', eventId],
+    queryKey: ["event", eventId],
     queryFn: () => fetchEvent(eventId),
     staleTime: 1000 * 60 * 5,
     cacheTime: 1000 * 60 * 30,
@@ -25,12 +25,12 @@ export const useEvent = (eventId) => {
     refetchOnReconnect: false,
   });
 
-  const refetchEvent = () => queryClient.invalidateQueries(['event', eventId]);
+  const refetchEvent = () => queryClient.invalidateQueries(["event", eventId]);
 
   return { event, isLoading, isError, error, refetchEvent };
 };
 
-export const useEvents = () => {
+export const useGetEvents = () => {
   const queryClient = useQueryClient();
 
   const {
@@ -39,7 +39,7 @@ export const useEvents = () => {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ['events'],
+    queryKey: ["events"],
     queryFn: fetchEvents,
     staleTime: 1000 * 60 * 5,
     cacheTime: 1000 * 60 * 30,
@@ -48,7 +48,7 @@ export const useEvents = () => {
     refetchOnReconnect: false,
   });
 
-  const refetchEvents = () => queryClient.invalidateQueries(['events']);
+  const refetchEvents = () => queryClient.invalidateQueries(["events"]);
 
   return { events, isLoading, isError, error, refetchEvents };
 };
@@ -75,7 +75,7 @@ export const useDeleteEvent = () => {
   const mutation = useMutation({
     mutationFn: ({ id }) => deleteEvent(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['events']);
+      queryClient.invalidateQueries(["events"]);
     },
   });
 

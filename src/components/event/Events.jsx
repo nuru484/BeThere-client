@@ -1,4 +1,4 @@
-import { useEvents, useDeleteEvent } from "@/hooks/useEvent";
+import { useGetEvents, useDeleteEvent } from "@/hooks/useEvent";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import EventListItem from "./EventListItem";
 
 const Events = () => {
-  const { events, isLoading, isError, error, refetchEvents } = useEvents();
+  const { events, isLoading, isError, error, refetchEvents } = useGetEvents();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { mutate: deleteEvent, isPending: isDeletePending } = useDeleteEvent();

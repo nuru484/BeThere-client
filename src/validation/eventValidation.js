@@ -1,14 +1,112 @@
 // src/validation/eventValidation.js
-import * as yup from "yup";
+import { z } from "zod";
 
-// update
-export const eventValidationSchema = yup.object({
-  title: yup
-    .string()
-    .required("Event title is required")
-    .min(4, "Title must be at least 4 characters"),
-  description: yup
-    .string()
-    .required("Description is required")
-    .min(10, "Description must be at least 10 characters"),
-});
+export const eventValidationSchema = z
+  .object({
+    title: z
+      .string()
+      .min(1, "Event title is required")
+      .max(255, "Event title must not exceed 255 characters")
+      .trim(),
+
+    description: z
+      .string()
+      .max(500, "Event description must not exceed 500 characters")
+      .trim()
+      .optional(),
+
+    startDate: z
+      .string()
+      .min(1, "Event start date is required")
+      .refine((date) => !isNaN(Date.parse(date)), {
+        message: "Start date must be a valid date",
+      }),
+
+    endDate: z
+      .string()
+      .optional()
+      .refine(
+        (date) => !date || !isNaN(Date.parse(date)),
+        {
+          message: "End date must be a valid date",
+        }
+      ),
+
+    startTime: z
+      .string()
+      .min(1, "Start time is required")
+      .regex(
+        /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/,
+        "Start time must be in HH:MM format (e.g., 06:00)"
+      ),
+
+    endTime: z
+      .string()
+      .min(1, "End time is required")
+      .regex(
+        /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/,
+        "End time must be in HH:MM format (e.g., 19:30)"
+      ),
+
+    isRecurring: z.boolean().optional().default(false),
+
+    recurrenceInterval: z
+      .number()
+      .int()
+      .min(1, "Recurrence interval must be a positive integer")
+      .optional(),
+
+    durationDays: z
+      .number()
+      .int()
+      .min(1, "Duration days must be a positive integer")
+      .optional(),
+
+    type: z
+      .string()
+      .min(1, "Event type is required")
+      .trim(),
+
+    location: z.object({
+      name: z
+        .string()
+        .min(1, "Location name is required")
+        .max(255, "Location name must not exceed 255 characters")
+        .trim(),
+
+      latitude: z
+        .number()
+        .min(-90, "Latitude must be between -90 and 90")
+        .max(90, "Latitude must be between -90 and 90"),
+
+      longitude: z
+        .number()
+        .min(-180, "Longitude must be between -180 and 180")
+        .max(180, "Longitude must be between -180 and 180"),
+
+      city: z
+        .string()
+        .max(100, "City name must not exceed 100 characters")
+        .trim()
+        .optional(),
+
+      country: z
+        .string()
+        .max(100, "Country name must not exceed 100 characters")
+        .trim()
+        .optional(),
+    }),
+  })
+  .refine(
+    (data) => {
+      // For non-recurring events, endDate is required
+      if (!data.isRecurring && !data.endDate) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "End date is required for non-recurring events",
+      path: ["endDate"],
+    }
+  );

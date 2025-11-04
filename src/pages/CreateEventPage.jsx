@@ -1,77 +1,46 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useCreateEvent } from "@/hooks/useEvent";
+// src/pages/CreateEventPage.jsx
 import EventForm from "@/components/event/EventForm";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogAction,
-  AlertDialogDescription,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { useCreateEvent } from "@/hooks/useEvent";
+import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const CreateEventPage = () => {
-  const { mutate: createEvent, isPending, isError, error } = useCreateEvent();
-  const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
+  const { mutate: createEvent, isPending } = useCreateEvent();
 
-  const onSubmit = async (data) => {
+  const handleSubmit = (data) => {
     createEvent(data, {
-      onSuccess: () => {
-        setSuccess(true);
+      onSuccess: (response) => {
+        toast.success(response.message || "Event created successfully!");
+        navigate("/events");
+      },
+      onError: (err) => {
+        console.error("Event creation error:", err);
+
+        const { message, fieldErrors, hasFieldErrors } =
+          extractApiErrorMessage(err);
+
+        if (hasFieldErrors && fieldErrors) {
+          Object.entries(fieldErrors).forEach(([field, errorMessage]) => {
+            toast.error(`${field}: ${errorMessage}`);
+          });
+        }
+
+        if (!hasFieldErrors || message) {
+          toast.error(message || "Failed to create event. Please try again.");
+        }
       },
     });
   };
 
-  const handleRedirect = () => {
-    navigate("/dashboard");
-  };
-
   return (
-    <div className="container mx-auto min-h-screen ">
-      <div>
-        <EventForm
-          onSubmit={onSubmit}
-          isLoading={isPending}
-          onCancel={() => {
-            navigate(`/dashboard/events`);
-          }}
-        />
-      </div>
-
-      {isError && (
-        <Alert className="w-11/12 max-w-lg fixed top-4 left-1/2 -translate-x-1/2 border-red-600 mt-4">
-          <AlertDescription className="text-red-600">
-            {error?.message}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {success && (
-        <AlertDialog
-          open={success}
-          onOpenChange={() => {}}
-          aria-live="assertive"
-        >
-          <AlertDialogContent>
-            <AlertDialogTitle role="alert">
-              Event Created Successfully.
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Your event creation was successful! Click &quot;Okay&quot; to
-              proceed to your dashboard.
-            </AlertDialogDescription>
-            <AlertDialogAction
-              className="bg-emerald-600 hover:bg-emerald-500"
-              onClick={handleRedirect}
-              aria-label="Proceed to Dashboard"
-            >
-              Okay
-            </AlertDialogAction>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
+    <div className="container mx-auto py-8">
+      <EventForm
+        onSubmit={handleSubmit}
+        isLoading={isPending}
+        onCancel={() => navigate("/events")}
+      />
     </div>
   );
 };

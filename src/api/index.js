@@ -37,7 +37,6 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Only refresh if status is 401 and type is TOKEN_EXPIRED
     if (
       error.response?.status === 401 &&
       error.response?.data?.type === "TOKEN_EXPIRED" &&
@@ -47,6 +46,7 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = encryptStorage.getItem("refreshToken");
+
         if (!refreshToken) {
           throw new Error("No refresh token available");
         }
@@ -81,21 +81,17 @@ api.interceptors.response.use(
 // Add a response interceptor
 api.interceptors.response.use(
   (response) => {
-    // Automatically parse JSON responses
     return response.data;
   },
   async (error) => {
     if (error.response) {
-      // Server-side error
       const { data, status } = error.response;
 
-      // If errors are available in response, extract the messages
-      let message = "An error occurred"; // Default message
+      let message = "An error occurred";
+
       if (data.errors && Array.isArray(data.errors)) {
-        // If there are multiple validation errors, we join them into a single message
         message = data.errors.map((err) => err.message).join(", ");
       } else if (data.message) {
-        // Fallback if there's a top-level message
         message = data.message;
       }
 
@@ -106,13 +102,10 @@ api.interceptors.response.use(
         throw new APIError(message, status, "VALIDATION_ERROR", details);
       }
 
-      console.log(`message: ${message}`);
       throw new APIError(message, status, type);
     } else if (error.request) {
-      // Network error
       throw new APIError("Network error", 0, "NETWORK_ERROR");
     } else if (error.message === "canceled") {
-      // Request aborted
       throw new APIError("Request was aborted", 0, "ABORT_ERROR");
     }
 

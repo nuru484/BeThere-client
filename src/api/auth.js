@@ -7,7 +7,3 @@ export const refreshTokenApi = async () => {
 export const login = async (credentials) => {
   return await api.post("/auth/login", credentials);
 };
-
-export const signup = async (credentials) => {
-  return await api.post("/auth/signup", credentials);
-};
