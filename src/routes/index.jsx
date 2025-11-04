@@ -15,7 +15,7 @@ import EventAttendancePage from "@/pages/EventAttendancePage";
 import UserAttendancePage from "@/pages/UserAttendancePage";
 import UserEventAttendancePage from "@/pages/UserEventAttendancePage";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
-import UsersManagementPage from "@/pages/UsersManagementPage";
+import UsersManagePage from "@/pages/dashboard/UsersManagePage";
 
 const Routes = () => {
   const protectedRoutes = [
@@ -59,7 +59,7 @@ const Routes = () => {
             },
             {
               path: "/dashboard/users",
-              element: <UsersManagementPage />,
+              element: <UsersManagePage />,
             },
             {
               path: "/dashboard/add-facescan",

@@ -20,37 +20,37 @@ export const getUsers = async (params = {}) => {
   const url = `/users${queryString ? `?${queryString}` : ""}`;
 
   const response = await api.get(url);
-  return response.data;
+  return response;
 };
 
 // Get single user by ID
 export const getUserById = async (userId) => {
   const response = await api.get(`/users/${userId}`);
-  return response.data;
+  return response;
 };
 
 // Add/Create new user
 export const addUser = async (userData) => {
   const response = await api.post("/users", userData);
-  return response.data;
+  return response;
 };
 
 // Update user profile
 export const updateUser = async (userId, userData) => {
   const response = await api.put(`/users/${userId}`, userData);
-  return response.data;
+  return response;
 };
 
 // Update user role
 export const updateUserRole = async (userId, role) => {
   const response = await api.patch(`/users/${userId}/role`, { role });
-  return response.data;
+  return response;
 };
 
 // Delete single user
 export const deleteUser = async (userId) => {
   const response = await api.delete(`/users/${userId}`);
-  return response.data;
+  return response;
 };
 
 // Delete all users
@@ -58,5 +58,5 @@ export const deleteAllUsers = async (confirmData) => {
   const response = await api.delete("/users", {
     data: confirmData,
   });
-  return response.data;
+  return response;
 };
