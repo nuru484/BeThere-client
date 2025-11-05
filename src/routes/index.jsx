@@ -15,7 +15,9 @@ import EventAttendancePage from "@/pages/EventAttendancePage";
 import UserAttendancePage from "@/pages/UserAttendancePage";
 import UserEventAttendancePage from "@/pages/UserEventAttendancePage";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
-import UsersManagePage from "@/pages/dashboard/UsersManagePage";
+import UsersManagePage from "@/pages/dashboard/users/UsersManagePage";
+import CreateUserPage from "@/pages/dashboard/users/CreateUserPage";
+import EditUserPage from "@/pages/dashboard/users/EditUserPage";
 
 const Routes = () => {
   const protectedRoutes = [
@@ -60,6 +62,14 @@ const Routes = () => {
             {
               path: "/dashboard/users",
               element: <UsersManagePage />,
+            },
+            {
+              path: "/dashboard/users/create",
+              element: <CreateUserPage />,
+            },
+            {
+              path: "/dashboard/users/:userId/edit",
+              element: <EditUserPage />,
             },
             {
               path: "/dashboard/add-facescan",

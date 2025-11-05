@@ -19,8 +19,9 @@ Built with **React (Vite)**, **React Query**, **Shadcn UI**, and **face-api.js**
 * [Environment Variables](#-environment-variables)
 * [Getting Started](#-getting-started)
 * [Deployment](#-deployment)
-* [Screenshots](#-screenshots)
+* [Screenshots](#-screenshots) 
 * [License](#-license)
+* [Contributing](#-contributing)
 * [Author](#-author)
 
 ---

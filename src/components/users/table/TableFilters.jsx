@@ -30,20 +30,16 @@ export function TableFilters({
   const selectedCount = table.getSelectedRowModel().rows.length;
   const isAllSelected = selectedCount === totalCount && totalCount > 0;
 
-  // Local state for search input
   const [searchInput, setSearchInput] = useState(filters.search || "");
 
-  // Debounce search input
   const debouncedSearch = useDebounce(searchInput, 500);
 
-  // Update filters when debounced search changes
   useEffect(() => {
     if (debouncedSearch !== filters.search) {
       onFiltersChange({ search: debouncedSearch || undefined });
     }
   }, [debouncedSearch, filters.search, onFiltersChange]);
 
-  // Convert filter values to display values
   const getRoleFilterValue = () => {
     if (filters.role === "ADMIN") return "admin";
     if (filters.role === "USER") return "user";

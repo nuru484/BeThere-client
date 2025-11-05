@@ -89,9 +89,7 @@ export function UserActionsDropdown({ user }) {
 
           {/* Edit User Details */}
           <DropdownMenuItem
-            onClick={() =>
-              navigate(`/dashboard/users/${user.id}/update-profile`)
-            }
+            onClick={() => navigate(`/dashboard/users/${user.id}/edit`)}
             className="hover:cursor-pointer"
           >
             <Pencil className="mr-2 h-4 w-4" />

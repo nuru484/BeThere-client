@@ -103,15 +103,17 @@ export function UsersDataTable({
       const deletePromises = selectedRows.map((row) =>
         deleteUserMutation.mutateAsync(row.original.id)
       );
-      await Promise.all(deletePromises);
+      const response = await Promise.all(deletePromises);
       toast.dismiss(toastId);
-      toast.success(`${selectedCount} users deleted successfully`);
+      toast.success(
+        response.message || `${selectedCount} users deleted successfully`
+      );
       setRowSelection({});
       onRefresh?.();
     } catch (error) {
       console.error("Delete error:", error);
       toast.dismiss(toastId);
-      toast.error(error?.response?.data?.message || "Failed to delete users");
+      toast.error(error.message || "Failed to delete users");
     }
   };
 
@@ -119,11 +121,11 @@ export function UsersDataTable({
     const toastId = toast.loading("Deleting all users..., please wait");
 
     try {
-      await deleteAllUsersMutation.mutateAsync({
+      const response = await deleteAllUsersMutation.mutateAsync({
         confirmDelete: "DELETE_ALL_USERS",
       });
       toast.dismiss(toastId);
-      toast.success("All users deleted successfully");
+      toast.success(response.message || "All users deleted successfully");
       setDeleteAllDialogOpen(false);
       setRowSelection({});
       onRefresh?.();
@@ -131,7 +133,7 @@ export function UsersDataTable({
       console.error("Delete all error:", error);
       toast.dismiss(toastId);
       toast.error(
-        error?.response?.data?.message || "Failed to delete all users"
+        error?.message || "Failed to delete all users"
       );
     }
   };

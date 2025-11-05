@@ -83,7 +83,7 @@ const UsersManagePage = () => {
           </div>
 
           <Link
-            to="/dashboard/users/create-user"
+            to="/dashboard/users/create"
             className="px-3 py-2 sm:px-4 sm:py-2 bg-foreground text-background 
                rounded-md shadow cursor-pointer transition-colors duration-200 
                hover:bg-foreground/90 text-sm sm:text-base font-medium
