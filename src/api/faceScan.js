@@ -2,8 +2,6 @@ import { api } from ".";
 
 export const addFaceScan = async (data) => api.post(`/facescan`, data);
 
-export const getFaceScan = (identityNumber) =>
-  api.get(`/facescan/${identityNumber}`);
+export const getUserFaceScan = (userId) => api.get(`/facescan/${userId}`);
 
-export const deleteFaceScan = async (identityNumber) =>
-  api.delete(`/facescan/${identityNumber}`);
+export const deleteFaceScan = (userId) => api.delete(`/facescan/${userId}`);

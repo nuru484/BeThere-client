@@ -1,47 +1,37 @@
+// src/hooks/useFaceScanApi.js
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { deleteFaceScan, addFaceScan, getFaceScan } from "@/api/faceScan";
+import { deleteFaceScan, addFaceScan, getUserFaceScan } from "@/api/faceScan";
 
-export const useFaceScan = (userId) => {
-  const queryClient = useQueryClient();
-
-  const {
-    data: facescan,
-    error,
-    isLoading,
-    isError,
-  } = useQuery({
+export const useGetUserFaceScan = (userId) => {
+  return useQuery({
     queryKey: ["facescan", userId],
-    queryFn: () => getFaceScan(userId),
+    queryFn: () => getUserFaceScan(userId),
     staleTime: 1000 * 60 * 5,
     cacheTime: 1000 * 60 * 30,
     retry: 2,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
-
-  const refetchFaceScan = () =>
-    queryClient.invalidateQueries(["facescan", userId]);
-
-  return { facescan, isLoading, isError, error, refetchFaceScan };
 };
 
 export const useAddFaceScan = () => {
-  const mutation = useMutation({
-    mutationFn: addFaceScan,
-  });
+  const queryClient = useQueryClient();
 
-  return mutation;
+  return useMutation({
+    mutationFn: (userData) => addFaceScan(userData),
+    onSuccess: (_, userId) => {
+      queryClient.invalidateQueries(["facescan", userId]);
+    },
+  });
 };
 
 export const useDeleteFaceScan = () => {
   const queryClient = useQueryClient();
 
-  const mutation = useMutation({
+  return useMutation({
     mutationFn: ({ userId }) => deleteFaceScan(userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["facescan"] });
     },
   });
-
-  return mutation;
 };

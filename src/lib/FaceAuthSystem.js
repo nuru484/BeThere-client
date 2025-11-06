@@ -96,6 +96,7 @@ export class FaceAuthSystem {
 
       // Average descriptors
       const avgDescriptor = new Float32Array(128);
+
       for (let i = 0; i < 128; i++) {
         avgDescriptor[i] =
           descriptors.reduce((sum, d) => sum + d[i], 0) / descriptors.length;
@@ -210,12 +211,6 @@ export class FaceAuthSystem {
       const isLive =
         movementVariance > movementThreshold ||
         avgExpressionVariance > expressionThreshold;
-
-      console.log("Liveness check:", {
-        movementVariance,
-        avgExpressionVariance,
-        isLive,
-      });
 
       return isLive;
     } catch (error) {

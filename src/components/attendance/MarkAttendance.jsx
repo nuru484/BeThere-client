@@ -1,3 +1,4 @@
+// src/components/attendance/MarkAttendance.jsx
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -5,10 +6,12 @@ import {
   useUpdateAttendance,
 } from "@/hooks/useAttendance";
 import ScanUserFace from "@/components/ScanUserFace";
-import { useFaceVerification } from "@/hooks/useFaceVerification";
+import { FaceAuthSystem } from "@/lib/FaceAuthSystem";
+import { useGetUserFaceScan } from "@/hooks/useFaceScanApi";
 import { useAuth } from "@/hooks/useAuth";
-import { format } from "date-fns";
 import PropTypes from "prop-types";
+import toast from "react-hot-toast";
+import ErrorMessage from "../ui/ErrorMessage";
 
 export default function MarkAttendance({ type = "in" }) {
   const { user } = useAuth();
@@ -17,32 +20,38 @@ export default function MarkAttendance({ type = "in" }) {
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [locationError, setLocationError] = useState("");
-  const [status, setStatus] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
   const watchIdRef = useRef(null);
+  const authSystemRef = useRef(null);
 
   const {
-    verifyFace,
-    isVerifying,
-    error: faceError,
-    isLoading: faceLoading,
-  } = useFaceVerification(user.id);
+    data: userFaceData,
+    isLoading: fetchingUserFaceData,
+    isError: isFaceApiDataError,
+    error: faceApiDataError,
+    refetch: refetchFaceData,
+  } = useGetUserFaceScan(user?.id);
 
-  const {
-    mutate: createAttendance,
-    isLoading: isCreating,
-    error: createError,
-  } = useCreateAttendance();
+  const storedDescriptor = userFaceData?.data?.descriptor;
 
-  const {
-    mutate: updateAttendance,
-    isLoading: isUpdating,
-    error: updateError,
-  } = useUpdateAttendance();
+  const { mutate: createAttendance, isLoading: isCreating } =
+    useCreateAttendance();
+
+  const { mutate: updateAttendance, isLoading: isUpdating } =
+    useUpdateAttendance();
 
   const isMarking = type === "in" ? isCreating : isUpdating;
-  const attendanceError = type === "in" ? createError : updateError;
   const markAttendance = type === "in" ? createAttendance : updateAttendance;
+
+  // Initialize FaceAuthSystem
+  useEffect(() => {
+    const initAuthSystem = async () => {
+      const system = new FaceAuthSystem({ distanceThreshold: 0.6 });
+      await system.initialize();
+      authSystemRef.current = system;
+    };
+    initAuthSystem();
+  }, []);
 
   // Start watching location
   const startWatchingLocation = useCallback(() => {
@@ -99,43 +108,95 @@ export default function MarkAttendance({ type = "in" }) {
     };
   }, [checkLocationPermission]);
 
-  const handleScanComplete = async (result) => {
-    const isVerified = await verifyFace(result);
-    if (isVerified) {
-      setStatus(`Authentication successful! Marking attendance ${type}...`);
-      setErrorMessage("");
+  const handleScanComplete = async (scanResult) => {
+    if (!scanResult || !scanResult.descriptor) {
+      toast.error("Invalid face scan result.");
+      return;
+    }
 
-      if (!latitude || !longitude) {
-        setStatus("");
-        setLocationError(
-          "Location is required to mark attendance. Please enable location services."
+    setIsVerifying(true);
+
+    try {
+      if (!storedDescriptor) {
+        toast.error(
+          "No stored face scan found. Please register your face first."
         );
+        setIsVerifying(false);
         return;
       }
 
-      const time = format(new Date(), "HH:mm");
+      // Verify face using FaceAuthSystem
+      const verificationResult = authSystemRef.current.verifyFaceScan(
+        scanResult.descriptor,
+        storedDescriptor
+      );
+
+      if (!verificationResult.success) {
+        toast.error("Face verification failed: " + verificationResult.message);
+        setIsVerifying(false);
+        return;
+      }
+
+      if (!verificationResult.isMatch) {
+        toast.error("Face does not match. Authentication failed.");
+        setIsVerifying(false);
+        return;
+      }
+
+      // Face verified successfully
+      toast.success("Face verified successfully!");
+
+      // Check location
+      if (!latitude || !longitude) {
+        setLocationError(
+          "Location is required to mark attendance. Please enable location services."
+        );
+        setIsVerifying(false);
+        return;
+      }
+
+      // Mark attendance
       const attendanceData = {
-        userId: user?.id,
-        eventId: parseInt(eventId),
         latitude,
         longitude,
-        ...(type === "in" ? { startTime: time } : { attendanceEndTime: time }),
       };
 
-      markAttendance(attendanceData, {
-        onSuccess: () => {
-          setStatus(`Attendance ${type} marked successfully!`);
-        },
-        onError: (err) => {
-          setStatus(`Attendance ${type} marking failed.`);
-          setErrorMessage(err.message || `Failed to mark attendance ${type}.`);
-        },
-      });
-    } else {
-      setStatus("Authentication failed.");
-      setErrorMessage(faceError || "Face scan does not match.");
+      markAttendance(
+        { eventId: parseInt(eventId), data: attendanceData },
+        {
+          onSuccess: (response) => {
+            toast.success(
+              response?.message || `Attendance ${type} marked successfully!`
+            );
+            setIsVerifying(false);
+            setTimeout(() => {
+              navigate(`/dashboard/events/${eventId}`);
+            }, 2000);
+          },
+          onError: (error) => {
+            toast.error(error?.message || `Failed to mark attendance ${type}.`);
+            setIsVerifying(false);
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Error during face verification:", error);
+      toast.error(
+        error?.message || "An error occurred during face verification."
+      );
+      setIsVerifying(false);
     }
   };
+
+  if (fetchingUserFaceData) return <div>Loading face data...</div>;
+
+  if (isFaceApiDataError) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <ErrorMessage error={faceApiDataError} onRetry={refetchFaceData} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
@@ -155,15 +216,9 @@ export default function MarkAttendance({ type = "in" }) {
             type === "in" ? "In" : "Out"
           }`}
           onScanComplete={handleScanComplete}
-          onStatusUpdate={setStatus}
-          onError={setErrorMessage}
-          disabled={faceLoading || isVerifying || isMarking || !user?.id}
+          disabled={isVerifying || isMarking || !user?.id}
         />
-        {faceLoading && (
-          <div className="mt-4 text-center font-medium text-gray-700">
-            Fetching stored fuzzy hash...
-          </div>
-        )}
+
         {isVerifying && (
           <div className="mt-4 text-center font-medium text-gray-700">
             Verifying face scan...
@@ -177,16 +232,6 @@ export default function MarkAttendance({ type = "in" }) {
         {locationError && (
           <div className="mt-4 text-sm text-red-500 text-center">
             {locationError}
-          </div>
-        )}
-        {status && !faceLoading && !isVerifying && !isMarking && (
-          <div className="mt-4 text-center font-medium text-gray-700">
-            {status}
-          </div>
-        )}
-        {(errorMessage || attendanceError?.message) && (
-          <div className="mt-4 text-sm text-red-500 text-center">
-            {errorMessage || attendanceError?.message}
           </div>
         )}
       </div>
