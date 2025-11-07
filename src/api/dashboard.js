@@ -1,10 +1,32 @@
 // src/api/dashboard.js
 import { api } from ".";
-
-export const getTotalUsersCount = async () => api.get("/dashboard/users");
+import { buildSearchParams } from "./users";
 
 export const getAdminDashboardTotals = async () =>
   api.get("/dashboard/admin/totals");
 
-export const getAdminDashboardAttendanceData = async () =>
-  api.get("/dashboard/admin/attendance-data");
+export const getAllUsersAttendanceData = async (params = {}) => {
+  const queryString = buildSearchParams(params);
+
+  const url = `/dashboard/admin/attendance-data${
+    queryString ? `?${queryString}` : ""
+  }`;
+
+  return await api.get(url);
+};
+
+export const getUserDashboardTotals = async () =>
+  api.get("/dashboard/user/totals");
+
+export const getRecentEvents = async () =>
+  api.get("/dashboard/user/recent-events");
+
+export const getUserAttendanceData = async (params = {}) => {
+  const queryString = buildSearchParams(params);
+
+  const url = `/dashboard/user/attendance-data${
+    queryString ? `?${queryString}` : ""
+  }`;
+
+  return await api.get(url);
+};

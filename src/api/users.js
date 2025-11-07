@@ -2,7 +2,7 @@
 import { api } from ".";
 
 // URL search params helper
-const buildSearchParams = (params) => {
+export const buildSearchParams = (params) => {
   const searchParams = new URLSearchParams();
 
   Object.entries(params).forEach(([key, value]) => {

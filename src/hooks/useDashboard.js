@@ -1,126 +1,70 @@
 // src/hooks/useDashboard.js
 import { useQuery } from "@tanstack/react-query";
 import {
-  getTotalUsersCount,
-  getTotalEventsCount,
-  getUpcomingEventsCount,
-  getAttendanceRecordsToday,
-  getRecentActivityFeed,
+  getAdminDashboardTotals,
+  getAllUsersAttendanceData,
+  getUserDashboardTotals,
+  getRecentEvents,
+  getUserAttendanceData,
 } from "@/api/dashboard";
 
-export const useGetTotalUsers = () => {
-  const {
-    data: totalUsers,
-    error,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["totalUsers"],
-    queryFn: getTotalUsersCount,
+export const useGetAdminDashboardTotals = () => {
+  return useQuery({
+    queryKey: ["adminDashboardTotals"],
+    queryFn: getAdminDashboardTotals,
     staleTime: 1000 * 60 * 5, // 5 minutes
     cacheTime: 1000 * 60 * 30, // 30 minutes
     retry: 2,
     refetchOnWindowFocus: false,
   });
-
-  return {
-    totalUsers,
-    isLoading,
-    isError,
-    error,
-  };
 };
 
-export const useGetTotalEvents = () => {
-  const {
-    data: totalEvents,
-    error,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["totalEvents"],
-    queryFn: getTotalEventsCount,
+export const useGetAllUsersAttendanceData = (params = {}) => {
+  const queryKey = ["allUsersAttendanceData", params];
+
+  return useQuery({
+    queryKey,
+    queryFn: () => getAllUsersAttendanceData(params),
     staleTime: 1000 * 60 * 5,
     cacheTime: 1000 * 60 * 30,
     retry: 2,
     refetchOnWindowFocus: false,
+    keepPreviousData: true,
   });
-
-  return {
-    totalEvents,
-    isLoading,
-    isError,
-    error,
-  };
 };
 
-export const useGetUpcomingEvents = () => {
-  const {
-    data: upcomingEvents,
-    error,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["upcomingEvents"],
-    queryFn: getUpcomingEventsCount,
+export const useGetUserDashboardTotals = () => {
+  return useQuery({
+    queryKey: ["userDashboardTotals"],
+    queryFn: getUserDashboardTotals,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    cacheTime: 1000 * 60 * 30, // 30 minutes
+    retry: 2,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useGetRecentEvents = () => {
+  return useQuery({
+    queryKey: ["recentEvents"],
+    queryFn: getRecentEvents,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    cacheTime: 1000 * 60 * 30, // 30 minutes
+    retry: 2,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useGetUserAttendanceData = (params = {}) => {
+  const queryKey = ["usersAttendanceData", params];
+
+  return useQuery({
+    queryKey,
+    queryFn: () => getUserAttendanceData(params),
     staleTime: 1000 * 60 * 5,
     cacheTime: 1000 * 60 * 30,
     retry: 2,
     refetchOnWindowFocus: false,
+    keepPreviousData: true,
   });
-
-  return {
-    upcomingEvents,
-    isLoading,
-    isError,
-    error,
-  };
-};
-
-export const useGetTodayAttendance = () => {
-  const {
-    data: todayAttendance,
-    error,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["todayAttendance"],
-    queryFn: getAttendanceRecordsToday,
-    staleTime: 1000 * 60 * 2, // 2 minutes for more frequent updates
-    cacheTime: 1000 * 60 * 10,
-    retry: 2,
-    refetchOnWindowFocus: true,
-    refetchInterval: 1000 * 60 * 5, // Auto-refetch every 5 minutes
-  });
-
-  return {
-    todayAttendance,
-    isLoading,
-    isError,
-    error,
-  };
-};
-
-export const useGetRecentActivity = () => {
-  const {
-    data: recentActivity,
-    error,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["recentActivity"],
-    queryFn: getRecentActivityFeed,
-    staleTime: 1000 * 60 * 2,
-    cacheTime: 1000 * 60 * 10,
-    retry: 2,
-    refetchOnWindowFocus: true,
-    refetchInterval: 1000 * 60 * 3, // Auto-refetch every 3 minutes
-  });
-
-  return {
-    recentActivity,
-    isLoading,
-    isError,
-    error,
-  };
 };
