@@ -7,7 +7,14 @@ import { ArrowLeft } from "lucide-react";
 import EventListItem from "./EventListItem";
 
 const Events = () => {
-  const { events, isLoading, isError, error, refetchEvents } = useGetEvents();
+  const {
+    data: events,
+    isLoading,
+    isError,
+    error,
+    refetchEvents,
+  } = useGetEvents();
+
   const navigate = useNavigate();
   const { user } = useAuth();
   const { mutate: deleteEvent, isPending: isDeletePending } = useDeleteEvent();

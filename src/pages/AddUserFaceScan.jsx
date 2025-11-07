@@ -1,12 +1,9 @@
-"use client";
+// src/pages/AddUserFaceScan.jsx
 import { useAddFaceScan } from "@/hooks/useFaceScanApi";
 import ScanUserFace from "@/components/ScanUserFace";
-import { useAuth } from "@/hooks/useAuth";
+import toast from "react-hot-toast";
 
 export default function AddUserFaceScan() {
-  const { user } = useAuth();
-  const userId = user.id;
-
   const {
     mutate: addFaceScan,
     isPending,
@@ -19,11 +16,11 @@ export default function AddUserFaceScan() {
     if (result.success) {
       try {
         addFaceScan({
-          userId,
-          faceScan: result.fuzzyHash,
+          faceScan: result.descriptor,
         });
       } catch (err) {
         console.log(err);
+        toast.error(err.message);
       }
     }
   };
@@ -44,13 +41,11 @@ export default function AddUserFaceScan() {
         <ScanUserFace
           buttonText="Register Face"
           onScanComplete={handleScanComplete}
-          onStatusUpdate={(status) => isPending && status}
-          onError={(err) => error?.message || err}
-          disabled={!userId || isPending}
+          disabled={isPending}
         />
         {isPending && (
           <div className="mt-4 text-center font-medium text-gray-700">
-            Sending fuzzy hash to backend...
+            Registring face...
           </div>
         )}
         {isSuccess && !isPending && (

@@ -12,8 +12,8 @@ export const createEvent = async (credentials) => {
   return await api.post(`/events`, credentials);
 };
 
-export const updateEvent = async (eventId, credentials) => {
-  return await api.put(`/events/${eventId}`, credentials);
+export const updateEvent = async (eventId, data) => {
+  return await api.put(`/events/${eventId}`, data);
 };
 
 export const deleteEvent = async (eventId) => {

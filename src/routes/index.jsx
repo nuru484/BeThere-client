@@ -36,7 +36,7 @@ const Routes = () => {
               element: <EventsPage />,
             },
             {
-              path: "/dashboard/events/:id",
+              path: "/dashboard/events/:eventId",
               element: <Event />,
             },
             {
@@ -44,7 +44,7 @@ const Routes = () => {
               element: <CreateEventPage />,
             },
             {
-              path: "/dashboard/events/update/:id",
+              path: "/dashboard/events/update/:eventId",
               element: <UpdateEventPage />,
             },
             {

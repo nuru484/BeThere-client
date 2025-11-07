@@ -28,7 +28,7 @@ const UpdateEventPage = () => {
       {
         onSuccess: (response) => {
           toast.success(response.message || "Event updated successfully!");
-          navigate(`/events/${eventId}`);
+          navigate(`/dashboard/events/${eventId}`);
         },
         onError: (err) => {
           console.error("Event update error:", err);
@@ -51,7 +51,7 @@ const UpdateEventPage = () => {
   };
 
   const handleCancel = () => {
-    navigate(-1); // Go back to previous page
+    navigate(-1);
   };
 
   // Loading state

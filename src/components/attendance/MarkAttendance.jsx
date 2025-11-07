@@ -32,7 +32,7 @@ export default function MarkAttendance({ type = "in" }) {
     refetch: refetchFaceData,
   } = useGetUserFaceScan(user?.id);
 
-  const storedDescriptor = userFaceData?.data?.descriptor;
+  const storedDescriptor = userFaceData?.data?.faceScan;
 
   const { mutate: createAttendance, isLoading: isCreating } =
     useCreateAttendance();
@@ -108,85 +108,102 @@ export default function MarkAttendance({ type = "in" }) {
     };
   }, [checkLocationPermission]);
 
-  const handleScanComplete = async (scanResult) => {
-    if (!scanResult || !scanResult.descriptor) {
-      toast.error("Invalid face scan result.");
-      return;
-    }
-
-    setIsVerifying(true);
-
-    try {
-      if (!storedDescriptor) {
-        toast.error(
-          "No stored face scan found. Please register your face first."
-        );
-        setIsVerifying(false);
+  const handleScanComplete = useCallback(
+    async (scanResult) => {
+      if (!scanResult || !scanResult.descriptor) {
+        toast.error("Invalid face scan result.");
         return;
       }
 
-      // Verify face using FaceAuthSystem
-      const verificationResult = authSystemRef.current.verifyFaceScan(
-        scanResult.descriptor,
-        storedDescriptor
-      );
+      setIsVerifying(true);
 
-      if (!verificationResult.success) {
-        toast.error("Face verification failed: " + verificationResult.message);
-        setIsVerifying(false);
-        return;
-      }
-
-      if (!verificationResult.isMatch) {
-        toast.error("Face does not match. Authentication failed.");
-        setIsVerifying(false);
-        return;
-      }
-
-      // Face verified successfully
-      toast.success("Face verified successfully!");
-
-      // Check location
-      if (!latitude || !longitude) {
-        setLocationError(
-          "Location is required to mark attendance. Please enable location services."
-        );
-        setIsVerifying(false);
-        return;
-      }
-
-      // Mark attendance
-      const attendanceData = {
-        latitude,
-        longitude,
-      };
-
-      markAttendance(
-        { eventId: parseInt(eventId), data: attendanceData },
-        {
-          onSuccess: (response) => {
-            toast.success(
-              response?.message || `Attendance ${type} marked successfully!`
-            );
-            setIsVerifying(false);
-            setTimeout(() => {
-              navigate(`/dashboard/events/${eventId}`);
-            }, 2000);
-          },
-          onError: (error) => {
-            toast.error(error?.message || `Failed to mark attendance ${type}.`);
-            setIsVerifying(false);
-          },
+      try {
+        if (!storedDescriptor) {
+          toast.error(
+            "No stored face scan found. Please register your face first."
+          );
+          setIsVerifying(false);
+          return;
         }
-      );
-    } catch (error) {
-      console.error("Error during face verification:", error);
-      toast.error(
-        error?.message || "An error occurred during face verification."
-      );
-      setIsVerifying(false);
-    }
-  };
+
+        // Verify face using FaceAuthSystem
+        const verificationResult = authSystemRef.current.verifyFaceScan(
+          scanResult.descriptor,
+          storedDescriptor
+        );
+
+        if (!verificationResult.success) {
+          toast.error(
+            "Face verification failed: " + verificationResult.message
+          );
+          setIsVerifying(false);
+          return;
+        }
+
+        if (!verificationResult.isMatch) {
+          toast.error("Face does not match. Authentication failed.");
+          setIsVerifying(false);
+          return;
+        }
+
+        // Face verified successfully
+        toast.success(
+          verificationResult.message || "Face verified successfully!"
+        );
+
+        // Check location
+        if (!latitude || !longitude) {
+          setLocationError(
+            "Location is required to mark attendance. Please enable location services."
+          );
+          setIsVerifying(false);
+          return;
+        }
+
+        // Mark attendance
+        const attendanceData = {
+          latitude,
+          longitude,
+        };
+
+        markAttendance(
+          { eventId: parseInt(eventId), attendanceData },
+          {
+            onSuccess: (response) => {
+              toast.success(
+                response?.message || `Attendance ${type} marked successfully!`
+              );
+              setIsVerifying(false);
+              setTimeout(() => {
+                navigate(`/dashboard/events/${eventId}`);
+              }, 2000);
+            },
+            onError: (error) => {
+              toast.error(
+                error?.message || `Failed to mark attendance ${type}.`
+              );
+              setIsVerifying(false);
+            },
+          }
+        );
+      } catch (error) {
+        console.error("Error during face verification:", error);
+        toast.error(
+          error?.message || "An error occurred during face verification."
+        );
+        setIsVerifying(false);
+      }
+    },
+    [
+      storedDescriptor,
+      latitude,
+      longitude,
+      markAttendance,
+      eventId,
+      type,
+      navigate,
+    ]
+  );
 
   if (fetchingUserFaceData) return <div>Loading face data...</div>;
 

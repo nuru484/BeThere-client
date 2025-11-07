@@ -10,10 +10,8 @@ import {
 
 export const useCreateAttendance = () => {
   const mutation = useMutation({
-    mutationFn: createAttendance,
-    onError: (error) => {
-      console.error("Attendance marking failed:", error);
-    },
+    mutationFn: ({ eventId, attendanceData }) =>
+      createAttendance(eventId, attendanceData),
   });
 
   return mutation;
@@ -21,10 +19,8 @@ export const useCreateAttendance = () => {
 
 export const useUpdateAttendance = () => {
   const mutation = useMutation({
-    mutationFn: updateAttendance,
-    onError: (error) => {
-      console.error("Attendance marking failed:", error);
-    },
+    mutationFn: ({ eventId, attendanceData }) =>
+      updateAttendance(eventId, attendanceData),
   });
 
   return mutation;

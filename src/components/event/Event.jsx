@@ -28,10 +28,10 @@ import { useState } from "react";
 
 const Event = ({ onBack }) => {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { eventId } = useParams();
   const { user } = useAuth();
   const { mutate: deleteEvent, isPending: isDeleting } = useDeleteEvent();
-  const { event: eventData, isLoading, isError, error } = useGetEvent(id);
+  const { data: eventData, isLoading, isError, error } = useGetEvent(eventId);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const isAdmin = user?.role === "ADMIN";
@@ -39,7 +39,7 @@ const Event = ({ onBack }) => {
   const event = eventData?.data;
 
   const handleDelete = () => {
-    deleteEvent({ id: id });
+    deleteEvent({ eventId });
     if (onBack) {
       onBack();
     } else {
@@ -49,15 +49,15 @@ const Event = ({ onBack }) => {
   };
 
   const handleClockIn = () => {
-    navigate(`/dashboard/events/${id}/attendance-in`);
+    navigate(`/dashboard/events/${eventId}/attendance-in`);
   };
 
   const handleClockOut = () => {
-    navigate(`/dashboard/events/${id}/attendance-out`);
+    navigate(`/dashboard/events/${eventId}/attendance-out`);
   };
 
   const handleViewAttendance = () => {
-    navigate(`/dashboard/events/${id}/attendance`);
+    navigate(`/dashboard/events/${eventId}/attendance`);
   };
 
   const handleBack = () => {

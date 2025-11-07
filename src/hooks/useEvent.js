@@ -8,14 +8,7 @@ import {
 } from "@/api/event";
 
 export const useGetEvent = (eventId) => {
-  const queryClient = useQueryClient();
-
-  const {
-    data: event,
-    error,
-    isLoading,
-    isError,
-  } = useQuery({
+  return useQuery({
     queryKey: ["event", eventId],
     queryFn: () => fetchEvent(eventId),
     staleTime: 1000 * 60 * 5,
@@ -24,21 +17,10 @@ export const useGetEvent = (eventId) => {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
-
-  const refetchEvent = () => queryClient.invalidateQueries(["event", eventId]);
-
-  return { event, isLoading, isError, error, refetchEvent };
 };
 
 export const useGetEvents = () => {
-  const queryClient = useQueryClient();
-
-  const {
-    data: events,
-    error,
-    isLoading,
-    isError,
-  } = useQuery({
+  return useQuery({
     queryKey: ["events"],
     queryFn: fetchEvents,
     staleTime: 1000 * 60 * 5,
@@ -47,34 +29,38 @@ export const useGetEvents = () => {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
-
-  const refetchEvents = () => queryClient.invalidateQueries(["events"]);
-
-  return { events, isLoading, isError, error, refetchEvents };
 };
 
 export const useCreateEvent = () => {
-  const mutation = useMutation({
-    mutationFn: createEvent,
-  });
+  const queryClient = useQueryClient();
 
-  return mutation;
+  return useMutation({
+    mutationFn: createEvent,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["events"]);
+    },
+  });
 };
 
 export const useUpdateEvent = () => {
-  const mutation = useMutation({
-    mutationFn: ({ id, data }) => updateEvent(id, data),
-  });
+  const queryClient = useQueryClient();
 
-  return mutation;
+  return useMutation({
+    mutationFn: ({ eventId, data }) => updateEvent(eventId, data),
+    onSuccess: (data, { eventId }) => {
+      queryClient.invalidateQueries(["event", eventId]);
+      queryClient.invalidateQueries(["events"]);
+    },
+  });
 };
 
 export const useDeleteEvent = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: ({ id }) => deleteEvent(id),
-    onSuccess: () => {
+    mutationFn: ({ eventId }) => deleteEvent(eventId),
+    onSuccess: (eventId) => {
+      queryClient.invalidateQueries(["event", eventId]);
       queryClient.invalidateQueries(["events"]);
     },
   });
