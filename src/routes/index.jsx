@@ -4,9 +4,9 @@ import ProtectedRoutes from "./ProtectedRoutes";
 import LoginPage from "@/pages/LoginPage";
 import ErrorPage from "@/pages/ErrorPage";
 import Layout from "@/components/Layout";
-import CreateEventPage from "@/pages/CreateEventPage";
-import UpdateEventPage from "@/pages/UpdateEventPage";
-import EventsPage from "@/pages/EventsPage";
+import CreateEventPage from "@/pages/dashboard/events/CreateEventPage";
+import UpdateEventPage from "@/pages/dashboard/events/UpdateEventPage";
+import EventsPage from "@/pages/dashboard/events/EventsPage";
 import Event from "@/components/event/Event";
 import AddUserFaceScan from "@/pages/AddUserFaceScan";
 import AttendanceIn from "@/pages/AttendanceIn";
@@ -14,10 +14,10 @@ import AttendanceOut from "@/pages/AttendanceOut";
 import EventAttendancePage from "@/pages/EventAttendancePage";
 import UserAttendancePage from "@/pages/UserAttendancePage";
 import UserEventAttendancePage from "@/pages/UserEventAttendancePage";
-import AdminDashboardPage from "@/pages/AdminDashboardPage";
 import UsersManagePage from "@/pages/dashboard/users/UsersManagePage";
 import CreateUserPage from "@/pages/dashboard/users/CreateUserPage";
 import EditUserPage from "@/pages/dashboard/users/EditUserPage";
+import DashboardRedirect from "@/pages/dashboard/DashboardRedirect";
 
 const Routes = () => {
   const protectedRoutes = [
@@ -30,7 +30,7 @@ const Routes = () => {
           element: <Layout />,
           errorElement: <ErrorPage />,
           children: [
-            { index: true, element: <AdminDashboardPage /> },
+            { index: true, element: <DashboardRedirect /> },
             {
               path: "/dashboard/events",
               element: <EventsPage />,

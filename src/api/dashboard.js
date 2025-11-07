@@ -16,15 +16,15 @@ export const getAllUsersAttendanceData = async (params = {}) => {
 };
 
 export const getUserDashboardTotals = async () =>
-  api.get("/dashboard/user/totals");
+  api.get("/dashboard/users/totals");
 
 export const getRecentEvents = async () =>
-  api.get("/dashboard/user/recent-events");
+  api.get("/dashboard/users/recent-events");
 
 export const getUserAttendanceData = async (params = {}) => {
   const queryString = buildSearchParams(params);
 
-  const url = `/dashboard/user/attendance-data${
+  const url = `/dashboard/users/attendance-data${
     queryString ? `?${queryString}` : ""
   }`;
 
