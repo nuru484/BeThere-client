@@ -1,11 +1,13 @@
 // src/pages/UserDashboard.jsx
 import { useGetUserDashboardTotals } from "@/hooks/useDashboard";
 import DashboardTotalsCard from "@/components/dashboard/DashboardTotalsCard";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
+import ErrorMessage from "@/components/ui/ErrorMessage";
 
 const UserDashboard = () => {
-  const { data, isLoading, isError, error } = useGetUserDashboardTotals();
+  const { data, isLoading, isError, error, refetch } =
+    useGetUserDashboardTotals();
 
   if (isLoading) {
     return (
@@ -18,16 +20,12 @@ const UserDashboard = () => {
     );
   }
 
+  const { message } = extractApiErrorMessage(error);
+
   if (isError) {
     return (
-      <div className="container mx-auto p-6">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {error?.response?.data?.message ||
-              "Failed to load dashboard data. Please try again later."}
-          </AlertDescription>
-        </Alert>
+      <div className="flex items-center justify-center min-h-96 px-4">
+        <ErrorMessage error={message} onRetry={refetch} />
       </div>
     );
   }

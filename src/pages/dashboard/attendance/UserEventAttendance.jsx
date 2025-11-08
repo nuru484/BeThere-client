@@ -9,6 +9,7 @@ import { DataTableSkeleton } from "@/components/ui/DataTableSkeleton";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { useGetUserEventAttendance } from "@/hooks/useAttendance";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
 
 const UserEventAttendancePage = () => {
   const { userId, eventId } = useParams();
@@ -84,14 +85,12 @@ const UserEventAttendancePage = () => {
     return <DataTableSkeleton />;
   }
 
-  const errorMessage = isError
-    ? error?.message || "An Unknown Error Occurred!"
-    : "An Unknown Error Occurred!";
+  const { message } = extractApiErrorMessage(error);
 
   if (isError) {
     return (
       <div className="flex items-center justify-center min-h-96">
-        <ErrorMessage error={errorMessage} onRetry={refetch} />
+        <ErrorMessage error={message} onRetry={refetch} />
       </div>
     );
   }

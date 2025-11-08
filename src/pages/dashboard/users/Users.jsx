@@ -7,6 +7,7 @@ import { useGetAllUsers } from "@/hooks/useUsers";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, UserPlus, Shield, UserCog } from "lucide-react";
+import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
 
 const Userspage = () => {
   const [page, setPage] = useState(1);
@@ -63,14 +64,12 @@ const Userspage = () => {
     return <DataTableSkeleton />;
   }
 
-  const errorMessage = isError
-    ? error?.message || "An Unknown Error Occurred!"
-    : "An Unknown Error Occurred!";
+  const { message } = extractApiErrorMessage(error);
 
   if (isError) {
     return (
       <div className="flex items-center justify-center min-h-96 px-4">
-        <ErrorMessage error={errorMessage} onRetry={refetch} />
+        <ErrorMessage error={message} onRetry={refetch} />
       </div>
     );
   }

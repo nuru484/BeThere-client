@@ -8,6 +8,7 @@ import ErrorMessage from "@/components/ui/ErrorMessage";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar } from "lucide-react";
+import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
 
 const UserAttendancePage = () => {
   const { userId } = useParams();
@@ -68,14 +69,12 @@ const UserAttendancePage = () => {
     return <DataTableSkeleton />;
   }
 
-  const errorMessage = isError
-    ? error?.message || "An Unknown Error Occurred!"
-    : "An Unknown Error Occurred!";
+  const { message } = extractApiErrorMessage(error);
 
   if (isError) {
     return (
       <div className="flex items-center justify-center min-h-96 px-4">
-        <ErrorMessage error={errorMessage} onRetry={refetch} />
+        <ErrorMessage error={message} onRetry={refetch} />
       </div>
     );
   }

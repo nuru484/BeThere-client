@@ -8,6 +8,7 @@ import { EventAttendanceDataTable } from "@/components/attendance/tables/eventAt
 import { DataTableSkeleton } from "@/components/ui/DataTableSkeleton";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { useGetEventAttendance } from "@/hooks/useAttendance";
+import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
 
 const EventAttendancePage = () => {
   const { eventId } = useParams();
@@ -74,14 +75,12 @@ const EventAttendancePage = () => {
     return <DataTableSkeleton />;
   }
 
-  const errorMessage = isError
-    ? error?.message || "An Unknown Error Occurred!"
-    : "An Unknown Error Occurred!";
+  const { message } = extractApiErrorMessage(error);
 
   if (isError) {
     return (
       <div className="flex items-center justify-center min-h-96 px-4">
-        <ErrorMessage error={errorMessage} onRetry={refetch} />
+        <ErrorMessage error={message} onRetry={refetch} />
       </div>
     );
   }

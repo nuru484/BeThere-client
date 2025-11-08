@@ -6,6 +6,7 @@ import { ArrowLeft, User } from "lucide-react";
 import { useGetUser } from "@/hooks/useUsers";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import UserForm from "@/components/users/UserForm";
+import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
 
 export default function EditUserPage() {
   const { userId } = useParams();
@@ -41,13 +42,10 @@ export default function EditUserPage() {
     );
   }
 
+  const { message } = extractApiErrorMessage(error);
+
   if (isError) {
-    return (
-      <ErrorMessage
-        error={error?.response?.data?.message || "Failed to load user"}
-        onRetry={refetch}
-      />
-    );
+    return <ErrorMessage error={message} onRetry={refetch} />;
   }
 
   if (!user) {

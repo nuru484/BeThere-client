@@ -1,53 +1,182 @@
 // src/pages/AdminDashboard.jsx
-import { useGetAdminDashboardTotals } from "@/hooks/useDashboard";
+import { useState } from "react";
+import {
+  useGetAdminDashboardTotals,
+  useGetAllUsersAttendanceData,
+} from "@/hooks/useDashboard";
 import DashboardTotalsCard from "@/components/dashboard/DashboardTotalsCard";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, AlertCircle } from "lucide-react";
+import DateRangeSelector from "@/components/dashboard/DateRangeSelector";
+import AttendanceLineChart from "@/components/dashboard/AttendanceLineChart";
+import AttendanceBarChart from "@/components/dashboard/AttendanceBarChart";
+import AttendancePieChart from "@/components/dashboard/AttendancePieChart";
+import EventTypeChart from "@/components/dashboard/EventTypeChart";
+import ErrorMessage from "@/components/ui/ErrorMessage";
+import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { format, subDays } from "date-fns";
+import DashboardSkeleton from "@/components/dashboard/skeletons/DashboardSkeleton";
+import AttendanceDataSkeleton from "@/components/dashboard/skeletons/AttendanceDataSkeleton";
 
 const AdminDashboard = () => {
-  const { data, isLoading, isError, error } = useGetAdminDashboardTotals();
+  const { data, isLoading, isError, error, refetch } =
+    useGetAdminDashboardTotals();
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-2">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
+  const [dateRange, setDateRange] = useState({
+    startDate: format(subDays(new Date(), 30), "yyyy-MM-dd"),
+    endDate: format(new Date(), "yyyy-MM-dd"),
+  });
 
-  if (isError) {
-    return (
-      <div className="container mx-auto p-6">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {error?.response?.data?.message ||
-              "Failed to load dashboard data. Please try again later."}
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
+  const {
+    data: attendanceData,
+    isLoading: isAttendanceLoading,
+    isError: isAttendanceError,
+    error: attendanceError,
+    refetch: refetchAttendance,
+  } = useGetAllUsersAttendanceData(dateRange);
 
   const totals = data?.data || {};
+  const attendance = attendanceData?.data || {};
+  const { summary, timeSeriesData, statusPercentages, statusCounts } =
+    attendance;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-        <p className="text-muted-foreground">
-          Overview of your system statistics and metrics
-        </p>
-      </div>
+    <div className="w-full min-h-screen">
+      <div className="container mx-auto space-y-6">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight break-words">
+            Admin Dashboard
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Overview of your system statistics and metrics
+          </p>
+        </div>
 
-      <DashboardTotalsCard totals={totals} isAdmin={true} />
+        {isLoading ? (
+          <DashboardSkeleton />
+        ) : isError ? (
+          <div className="flex items-center justify-center min-h-48 px-4">
+            <ErrorMessage
+              error={extractApiErrorMessage(error).message}
+              onRetry={refetch}
+            />
+          </div>
+        ) : (
+          <DashboardTotalsCard totals={totals} isAdmin={true} />
+        )}
 
-      {/* Additional admin-specific content can go here */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {/* Placeholder for future charts or tables */}
+        <DateRangeSelector
+          onDateChange={setDateRange}
+          isLoading={isAttendanceLoading}
+        />
+
+        {isAttendanceLoading && <AttendanceDataSkeleton />}
+
+        {isAttendanceError && (
+          <div className="flex items-center justify-center min-h-96 px-4">
+            <ErrorMessage
+              error={extractApiErrorMessage(attendanceError).message}
+              onRetry={refetchAttendance}
+            />
+          </div>
+        )}
+
+        {!isAttendanceLoading && !isAttendanceError && summary && (
+          <>
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              <Card className="overflow-hidden">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Total Attendances
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold break-words">
+                    {summary.totalAttendances}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1 break-words">
+                    {summary.dateRange.from} to {summary.dateRange.to}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="overflow-hidden">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Unique Users
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold break-words">
+                    {summary.uniqueUsersAttended}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Attended during period
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="overflow-hidden">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Present Rate
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600 break-words">
+                    {summary.statusPercentages.present}%
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1 break-words">
+                    {summary.statusCounts.present} attendances
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="overflow-hidden">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Absent Rate
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-red-600 break-words">
+                    {summary.statusPercentages.absent}%
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1 break-words">
+                    {summary.statusCounts.absent} absences
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {timeSeriesData && (
+              <div className="space-y-6">
+                <div className="w-full overflow-hidden">
+                  <AttendanceLineChart data={timeSeriesData} />
+                </div>
+
+                <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+                  <div className="w-full overflow-hidden">
+                    <AttendanceBarChart
+                      statusCounts={statusCounts}
+                      statusPercentages={statusPercentages}
+                    />
+                  </div>
+                  <div className="w-full overflow-hidden">
+                    <AttendancePieChart statusCounts={statusCounts} />
+                  </div>
+                </div>
+
+                {summary?.eventTypeBreakdown && (
+                  <div className="w-full overflow-hidden">
+                    <EventTypeChart
+                      eventTypeBreakdown={summary.eventTypeBreakdown}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
