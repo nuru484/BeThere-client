@@ -1,4 +1,4 @@
-// src/components/attendance/userAttendance/table/AttendanceActionsDropdown.jsx
+// src/components/attendance/tables/userAttendance/AttendanceActionsDropdown.jsx
 import { useNavigate } from "react-router-dom";
 import { MoreHorizontal, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";

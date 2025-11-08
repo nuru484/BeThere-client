@@ -1,16 +1,15 @@
-// src/components/attendance/eventAttendance/table/columns.jsx
-import { ArrowUpDown, Calendar, User } from "lucide-react";
+// src/components/attendance/tables/userAttendance/columns.jsx
+import { ArrowUpDown, Calendar, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { EventAttendanceActionsDropdown } from "./EventAttendanceActionsDropdown";
+import { AttendanceActionsDropdown } from "../../tables/userAttendance/AttendanceActionsDropdown";
 
 const getStatusVariant = (status) => {
   switch (status) {
     case "PRESENT":
-      return "default";
+      return "default"; // or "success" if you have it
     case "LATE":
       return "secondary";
     case "ABSENT":
@@ -20,7 +19,20 @@ const getStatusVariant = (status) => {
   }
 };
 
-export const createEventAttendanceColumns = () => [
+// const getStatusColor = (status) => {
+//   switch (status) {
+//     case "PRESENT":
+//       return "text-green-600";
+//     case "LATE":
+//       return "text-yellow-600";
+//     case "ABSENT":
+//       return "text-red-600";
+//     default:
+//       return "";
+//   }
+// };
+
+export const createAttendanceColumns = () => [
   {
     id: "select",
     header: ({ table }) => (
@@ -47,36 +59,26 @@ export const createEventAttendanceColumns = () => [
     enableHiding: false,
   },
   {
-    accessorKey: "user",
+    accessorKey: "session.event.title",
     header: ({ column }) => (
       <Button
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         className="p-0 h-auto font-semibold hover:bg-transparent text-left justify-start"
       >
-        <User className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-        User
+        Event
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
     cell: ({ row }) => {
-      const user = row.original.user;
+      const event = row.original.session?.event;
       return (
-        <div className="flex items-center gap-3">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={user?.profilePicture} alt={user?.firstName} />
-            <AvatarFallback>
-              {user?.firstName?.[0]}
-              {user?.lastName?.[0]}
-            </AvatarFallback>
-          </Avatar>
-          <div className="max-w-[200px] sm:max-w-[300px]">
-            <div className="font-medium truncate text-sm sm:text-base">
-              {user?.firstName} {user?.lastName}
-            </div>
-            <div className="text-xs sm:text-sm text-muted-foreground truncate">
-              {user?.email}
-            </div>
+        <div className="max-w-[200px] sm:max-w-[300px]">
+          <div className="font-medium truncate text-sm sm:text-base">
+            {event?.title || "N/A"}
+          </div>
+          <div className="text-xs sm:text-sm text-muted-foreground line-clamp-1 mt-1">
+            {event?.type || "N/A"}
           </div>
         </div>
       );
@@ -95,31 +97,6 @@ export const createEventAttendanceColumns = () => [
     },
   },
   {
-    accessorKey: "session.startDate",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="p-0 h-auto font-semibold hover:bg-transparent"
-      >
-        <Calendar className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-        Session Date
-        <ArrowUpDown className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => {
-      const startDate = row.original.session?.startDate;
-      if (!startDate) return <span className="text-xs sm:text-sm">N/A</span>;
-      const date = new Date(startDate);
-      return (
-        <div className="text-xs sm:text-sm">
-          <div>{format(date, "MMM dd, yyyy")}</div>
-          <div className="text-muted-foreground">{format(date, "hh:mm a")}</div>
-        </div>
-      );
-    },
-  },
-  {
     accessorKey: "checkInTime",
     header: ({ column }) => (
       <Button
@@ -127,6 +104,7 @@ export const createEventAttendanceColumns = () => [
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         className="p-0 h-auto font-semibold hover:bg-transparent"
       >
+        <Calendar className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
         Check In
         <ArrowUpDown className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
       </Button>
@@ -163,11 +141,45 @@ export const createEventAttendanceColumns = () => [
     },
   },
   {
+    accessorKey: "session.event.location",
+    header: "Location",
+    cell: ({ row }) => {
+      const location = row.original.session?.event?.location;
+      return (
+        <div className="max-w-[150px]">
+          <div className="flex items-center gap-1 text-xs sm:text-sm">
+            <MapPin className="h-3 w-3 text-muted-foreground" />
+            <span className="truncate">{location?.name || "N/A"}</span>
+          </div>
+          {location?.city && (
+            <div className="text-xs text-muted-foreground truncate">
+              {location.city}
+              {location.country && `, ${location.country}`}
+            </div>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "session.startDate",
+    header: "Session Date",
+    cell: ({ row }) => {
+      const startDate = row.original.session?.startDate;
+      if (!startDate) return <span className="text-xs sm:text-sm">N/A</span>;
+      const date = new Date(startDate);
+      return (
+        <div className="text-xs sm:text-sm">
+          <div className="sm:hidden">{format(date, "MMM dd")}</div>
+          <div className="hidden sm:block">{format(date, "MMM dd, yyyy")}</div>
+        </div>
+      );
+    },
+  },
+  {
     id: "actions",
     enableHiding: false,
     header: "Actions",
-    cell: ({ row }) => (
-      <EventAttendanceActionsDropdown attendance={row.original} />
-    ),
+    cell: ({ row }) => <AttendanceActionsDropdown attendance={row.original} />,
   },
 ];

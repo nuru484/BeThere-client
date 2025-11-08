@@ -1,4 +1,4 @@
-// src/components/attendance/table/AttendanceDataTable.jsx
+// src/components/attendance/tables/userAttendance/AttendanceDataTable.jsx
 import { useState, useMemo } from "react";
 import {
   flexRender,

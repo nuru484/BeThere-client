@@ -1,3 +1,4 @@
+// src/hooks/useEvent.js
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import {
   fetchEvent,
@@ -13,20 +14,21 @@ export const useGetEvent = (eventId) => {
     queryFn: () => fetchEvent(eventId),
     staleTime: 1000 * 60 * 5,
     cacheTime: 1000 * 60 * 30,
-    retry: 2,
-    refetchOnWindowFocus: false,
+    retry: 1,
     refetchOnReconnect: false,
   });
 };
 
-export const useGetEvents = () => {
+export const useGetEvents = (params = {}) => {
+  const queryKey = ["events", params];
+
   return useQuery({
-    queryKey: ["events"],
+    queryKey,
     queryFn: fetchEvents,
     staleTime: 1000 * 60 * 5,
     cacheTime: 1000 * 60 * 30,
     retry: 1,
-    refetchOnWindowFocus: false,
+    keepPreviousData: true,
     refetchOnReconnect: false,
   });
 };
@@ -57,13 +59,11 @@ export const useUpdateEvent = () => {
 export const useDeleteEvent = () => {
   const queryClient = useQueryClient();
 
-  const mutation = useMutation({
+  return useMutation({
     mutationFn: ({ eventId }) => deleteEvent(eventId),
     onSuccess: (eventId) => {
       queryClient.invalidateQueries(["event", eventId]);
       queryClient.invalidateQueries(["events"]);
     },
   });
-
-  return mutation;
 };

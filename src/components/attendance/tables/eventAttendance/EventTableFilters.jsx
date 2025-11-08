@@ -1,4 +1,4 @@
-// src/components/attendance/eventAttendance/table/EventTableFilters.jsx
+// src/components/attendance/tables/eventAttendance/EventTableFilters.jsx
 import { useState, useEffect } from "react";
 import { ChevronDown, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";

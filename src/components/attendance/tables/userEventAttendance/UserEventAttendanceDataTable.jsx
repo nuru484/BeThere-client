@@ -1,4 +1,4 @@
-// src/components/attendance/eventAttendance/table/EventAttendanceDataTable.jsx
+// src/components/attendance/tables/userEventAttendance/UserEventAttendanceDataTable.jsx
 import { useState, useMemo } from "react";
 import {
   flexRender,
@@ -17,12 +17,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { createEventAttendanceColumns } from "./columns";
-import { EventTableFilters } from "./EventTableFilters";
+import { createUserEventAttendanceColumns } from "./columns";
+import { UserEventTableFilters } from "./UserEventTableFilters";
 import { DataTablePagination } from "@/components/ui/DataTablePagination";
 import PropTypes from "prop-types";
 
-export function EventAttendanceDataTable({
+export function UserEventAttendanceDataTable({
   data,
   loading = false,
   totalCount = 0,
@@ -32,13 +32,17 @@ export function EventAttendanceDataTable({
   onPageChange,
   onPageSizeChange,
   onFiltersChange,
+  isRecurring = true,
 }) {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
 
-  const columns = useMemo(() => createEventAttendanceColumns(), []);
+  const columns = useMemo(
+    () => createUserEventAttendanceColumns(isRecurring),
+    [isRecurring]
+  );
 
   const table = useReactTable({
     data,
@@ -64,13 +68,15 @@ export function EventAttendanceDataTable({
 
   return (
     <div className="w-full max-w-full space-y-6">
-      {/* Filters with integrated actions */}
-      <EventTableFilters
-        table={table}
-        filters={filters}
-        onFiltersChange={onFiltersChange}
-        totalCount={totalCount}
-      />
+      {/* Filters - Only show for recurring events */}
+      {isRecurring && (
+        <UserEventTableFilters
+          table={table}
+          filters={filters}
+          onFiltersChange={onFiltersChange}
+          totalCount={totalCount}
+        />
+      )}
 
       {/* Table */}
       <div className="rounded-md border overflow-hidden">
@@ -97,18 +103,11 @@ export function EventAttendanceDataTable({
               {loading ? (
                 Array.from({ length: pageSize }).map((_, index) => (
                   <TableRow key={`skeleton-${index}`}>
-                    <TableCell>
-                      <Skeleton className="h-4 w-4" />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Skeleton className="h-8 w-8 rounded-full" />
-                        <div className="space-y-2">
-                          <Skeleton className="h-4 w-full max-w-[200px]" />
-                          <Skeleton className="h-3 w-24" />
-                        </div>
-                      </div>
-                    </TableCell>
+                    {isRecurring && (
+                      <TableCell>
+                        <Skeleton className="h-4 w-4" />
+                      </TableCell>
+                    )}
                     <TableCell>
                       <Skeleton className="h-6 w-16 rounded-full" />
                     </TableCell>
@@ -116,6 +115,12 @@ export function EventAttendanceDataTable({
                       <div className="space-y-1">
                         <Skeleton className="h-4 w-24" />
                         <Skeleton className="h-3 w-16" />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-24" />
                       </div>
                     </TableCell>
                     <TableCell>
@@ -163,7 +168,9 @@ export function EventAttendanceDataTable({
                         No attendance records found
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        Try adjusting your search or filter criteria
+                        {isRecurring
+                          ? "Try adjusting your search or filter criteria"
+                          : "This user has not attended this event"}
                       </div>
                     </div>
                   </TableCell>
@@ -174,27 +181,28 @@ export function EventAttendanceDataTable({
         </div>
       </div>
 
-      {/* Pagination */}
-      <DataTablePagination
-        table={table}
-        totalCount={totalCount}
-        page={page}
-        pageSize={pageSize}
-        onPageChange={onPageChange}
-        onPageSizeChange={onPageSizeChange}
-      />
+      {/* Pagination - Only show for recurring events with multiple records */}
+      {isRecurring && totalCount > pageSize && (
+        <DataTablePagination
+          table={table}
+          totalCount={totalCount}
+          page={page}
+          pageSize={pageSize}
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+        />
+      )}
     </div>
   );
 }
 
-EventAttendanceDataTable.propTypes = {
+UserEventAttendanceDataTable.propTypes = {
   data: PropTypes.arrayOf(PropTypes.object).isRequired,
   loading: PropTypes.bool,
   totalCount: PropTypes.number,
   page: PropTypes.number,
   pageSize: PropTypes.number,
   filters: PropTypes.shape({
-    search: PropTypes.string,
     status: PropTypes.oneOf(["PRESENT", "LATE", "ABSENT"]),
     sessionId: PropTypes.string,
     startDate: PropTypes.string,
@@ -203,4 +211,5 @@ EventAttendanceDataTable.propTypes = {
   onPageChange: PropTypes.func.isRequired,
   onPageSizeChange: PropTypes.func.isRequired,
   onFiltersChange: PropTypes.func.isRequired,
+  isRecurring: PropTypes.bool,
 };

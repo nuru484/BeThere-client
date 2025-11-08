@@ -1,9 +1,14 @@
 import { api } from ".";
+import { buildSearchParams } from "./users";
 
 export const fetchEvent = async (eventId) =>
   await api.get(`/events/${eventId}`);
 
-export const fetchEvents = async () => await api.get(`/events`);
+export const fetchEvents = async (params) => {
+  const queryString = buildSearchParams(params);
+  const url = `/events${queryString ? `?${queryString}` : ""}`;
+  return await api.get(url);
+};
 
 export const createEvent = async (credentials) =>
   await api.post(`/events`, credentials);

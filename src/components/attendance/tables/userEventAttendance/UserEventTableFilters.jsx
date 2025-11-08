@@ -1,5 +1,5 @@
-// src/components/attendance/table/TableFilters.jsx
-import { useState, useEffect } from "react";
+// src/components/attendance/tables/userEventAttendance/UserEventTableFilters.jsx
+import { useState } from "react";
 import { ChevronDown, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +17,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { useDebounce } from "@/hooks/useDebounce";
 import {
   Popover,
   PopoverContent,
@@ -27,25 +26,21 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import PropTypes from "prop-types";
 
-export function TableFilters({ table, filters, onFiltersChange, totalCount }) {
+export function UserEventTableFilters({
+  table,
+  filters,
+  onFiltersChange,
+  totalCount,
+}) {
   const selectedCount = table.getSelectedRowModel().rows.length;
   const isAllSelected = selectedCount === totalCount && totalCount > 0;
 
-  const [searchInput, setSearchInput] = useState(filters.search || "");
   const [startDate, setStartDate] = useState(
     filters.startDate ? new Date(filters.startDate) : undefined
   );
   const [endDate, setEndDate] = useState(
     filters.endDate ? new Date(filters.endDate) : undefined
   );
-
-  const debouncedSearch = useDebounce(searchInput, 500);
-
-  useEffect(() => {
-    if (debouncedSearch !== filters.search) {
-      onFiltersChange({ search: debouncedSearch || undefined });
-    }
-  }, [debouncedSearch, filters.search, onFiltersChange]);
 
   const getStatusFilterValue = () => {
     if (filters.status === "PRESENT") return "present";
@@ -80,19 +75,16 @@ export function TableFilters({ table, filters, onFiltersChange, totalCount }) {
 
   const hasFiltersApplied =
     filters.status !== undefined ||
-    filters.search !== undefined ||
-    filters.eventType !== undefined ||
+    filters.sessionId !== undefined ||
     filters.startDate !== undefined ||
     filters.endDate !== undefined;
 
   const clearFilters = () => {
-    setSearchInput("");
     setStartDate(undefined);
     setEndDate(undefined);
     onFiltersChange({
-      search: undefined,
       status: undefined,
-      eventType: undefined,
+      sessionId: undefined,
       startDate: undefined,
       endDate: undefined,
     });
@@ -102,7 +94,7 @@ export function TableFilters({ table, filters, onFiltersChange, totalCount }) {
     <div className="space-y-4">
       {/* Action Bar */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-        {/* Selection Info & Delete Action */}
+        {/* Selection Info */}
         <div className="flex items-center gap-3 order-2 lg:order-1">
           {selectedCount > 0 ? (
             <div className="flex items-center gap-3 bg-muted/50 px-3 py-2 rounded-lg border">
@@ -120,16 +112,6 @@ export function TableFilters({ table, filters, onFiltersChange, totalCount }) {
 
       {/* Filters Row */}
       <div className="flex flex-col xl:flex-row gap-4">
-        {/* Search Input */}
-        <div className="flex-1 min-w-0">
-          <Input
-            placeholder="Search by event, location, or type..."
-            value={searchInput}
-            onChange={(event) => setSearchInput(event.target.value)}
-            className="w-full"
-          />
-        </div>
-
         {/* Filter Controls */}
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
           {/* Status Filter */}
@@ -148,13 +130,13 @@ export function TableFilters({ table, filters, onFiltersChange, totalCount }) {
             </SelectContent>
           </Select>
 
-          {/* Event Type Filter */}
+          {/* Session Filter */}
           <Input
-            placeholder="Event type..."
-            value={filters.eventType || ""}
+            placeholder="Session ID..."
+            value={filters.sessionId || ""}
             onChange={(e) =>
               onFiltersChange({
-                eventType: e.target.value || undefined,
+                sessionId: e.target.value || undefined,
               })
             }
             className="w-full sm:w-[140px]"
@@ -247,20 +229,6 @@ export function TableFilters({ table, filters, onFiltersChange, totalCount }) {
       {hasFiltersApplied && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-muted-foreground">Active filters:</span>
-          {filters.search && (
-            <Badge variant="secondary" className="gap-2">
-              Search: {filters.search}
-              <button
-                onClick={() => {
-                  setSearchInput("");
-                  onFiltersChange({ search: undefined });
-                }}
-                className="ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5"
-              >
-                ×
-              </button>
-            </Badge>
-          )}
           {filters.status !== undefined && (
             <Badge variant="secondary" className="gap-2">
               Status: {filters.status}
@@ -272,11 +240,11 @@ export function TableFilters({ table, filters, onFiltersChange, totalCount }) {
               </button>
             </Badge>
           )}
-          {filters.eventType && (
+          {filters.sessionId && (
             <Badge variant="secondary" className="gap-2">
-              Type: {filters.eventType}
+              Session: {filters.sessionId}
               <button
-                onClick={() => onFiltersChange({ eventType: undefined })}
+                onClick={() => onFiltersChange({ sessionId: undefined })}
                 className="ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5"
               >
                 ×
@@ -317,15 +285,14 @@ export function TableFilters({ table, filters, onFiltersChange, totalCount }) {
   );
 }
 
-TableFilters.propTypes = {
+UserEventTableFilters.propTypes = {
   table: PropTypes.shape({
     getSelectedRowModel: PropTypes.func.isRequired,
     getAllColumns: PropTypes.func.isRequired,
   }).isRequired,
   filters: PropTypes.shape({
-    search: PropTypes.string,
     status: PropTypes.oneOf(["PRESENT", "LATE", "ABSENT"]),
-    eventType: PropTypes.string,
+    sessionId: PropTypes.string,
     startDate: PropTypes.string,
     endDate: PropTypes.string,
   }).isRequired,

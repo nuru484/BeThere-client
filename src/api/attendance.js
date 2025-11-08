@@ -28,5 +28,12 @@ export const getEventAttendance = async (eventId, params = {}) => {
   return await api.get(url);
 };
 
-export const getUserEventAttendance = async (userId, eventId) =>
-  api.get(`/attendance/users/${userId}/events/${eventId}`);
+export const getUserEventAttendance = async (userId, eventId, params = {}) => {
+  const queryString = buildSearchParams(params);
+
+  const url = `attendance/users/${userId}/events/${eventId}${
+    queryString ? `?${queryString}` : ""
+  }`;
+
+  return await api.get(url);
+};
