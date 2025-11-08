@@ -9,62 +9,44 @@ import {
 } from "@/api/attendance";
 
 export const useCreateAttendance = () => {
-  const mutation = useMutation({
+  const queryClient = useQueryClient();
+
+  return useMutation({
     mutationFn: ({ eventId, attendanceData }) =>
       createAttendance(eventId, attendanceData),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["attendance"]);
+    },
   });
-
-  return mutation;
 };
 
 export const useUpdateAttendance = () => {
-  const mutation = useMutation({
-    mutationFn: ({ eventId, attendanceData }) =>
-      updateAttendance(eventId, attendanceData),
-  });
-
-  return mutation;
-};
-
-export const useGetUserAttendance = (userId) => {
   const queryClient = useQueryClient();
 
-  const {
-    data: userAttendance,
-    error,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["userAttendance", userId],
-    queryFn: () => getUserAttendance(userId),
-    staleTime: 1000 * 60 * 5,
-    cacheTime: 1000 * 60 * 30,
-    retry: 2,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+  return useMutation({
+    mutationFn: ({ eventId, data }) => updateAttendance(eventId, data),
+    onSuccess: (data, { eventId }) => {
+      queryClient.invalidateQueries(["attendance", eventId]);
+      queryClient.invalidateQueries(["attendance"]);
+    },
   });
+};
 
-  const refetchUserAttendance = () =>
-    queryClient.invalidateQueries(["userAttendance", userId]);
+export const useGetUserAttendance = (userId, params = {}) => {
+  const queryKey = ["userAttendance", userId, params];
 
-  return {
-    userAttendance,
-    isLoading,
-    isError,
-    error,
-    refetchUserAttendance,
-  };
+  return useQuery({
+    queryKey,
+    queryFn: () => getUserAttendance(userId, params),
+    cacheTime: 1000 * 60 * 30,
+    staleTime: 1000 * 60 * 5,
+    retry: 2,
+    keepPreviousData: true,
+  });
 };
 
 export const useEventAttendance = (eventId) => {
-  const queryClient = useQueryClient();
-
-  const {
-    data: eventAttendance,
-    error,
-    isLoading,
-    isError,
-  } = useQuery({
+  return useQuery({
     queryKey: ["eventAttendance", eventId],
     queryFn: () => getEventAttendance(eventId),
     staleTime: 1000 * 60 * 5,
@@ -74,28 +56,10 @@ export const useEventAttendance = (eventId) => {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
-
-  const refetchEventAttendance = () =>
-    queryClient.invalidateQueries(["eventAttendance", eventId]);
-
-  return {
-    eventAttendance,
-    isLoading,
-    isError,
-    error,
-    refetchEventAttendance,
-  };
 };
 
 export const useGetUserEventAttendance = (userId, eventId) => {
-  const queryClient = useQueryClient();
-
-  const {
-    data: userEventAttendance,
-    error,
-    isLoading,
-    isError,
-  } = useQuery({
+  return useQuery({
     queryKey: ["userEventAttendance", userId, eventId],
     queryFn: () => getUserEventAttendance(userId, eventId),
     enabled: !!(userId && eventId),
@@ -106,15 +70,4 @@ export const useGetUserEventAttendance = (userId, eventId) => {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
-
-  const refetchUserEventAttendance = () =>
-    queryClient.invalidateQueries(["userEventAttendance", userId, eventId]);
-
-  return {
-    userEventAttendance,
-    isLoading,
-    isError,
-    error,
-    refetchUserEventAttendance,
-  };
 };

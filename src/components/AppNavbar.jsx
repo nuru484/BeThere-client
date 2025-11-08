@@ -35,8 +35,8 @@ const getMenuItems = (user) => {
           {
             title: "My Attendance",
             icon: UserRoundPen,
-            url: "attendance",
-            path: "/dashboard/attendance",
+            url: `attendance/${user.id}`,
+            path: `/dashboard/attendance/${user.id}`,
           },
         ]
       : []),

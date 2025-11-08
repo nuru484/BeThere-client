@@ -36,8 +36,7 @@ const LoginPage = () => {
   const onSubmit = async (data) => {
     login(data, {
       onSuccess: (response) => {
-        toast.success("Login Successful");
-        console.log("Login Response: ", response);
+        toast.success(response.message || "Login Successful");
         logUserIn(response.user);
         encryptStorage.setItem("accessToken", response.accessToken);
         encryptStorage.setItem("refreshToken", response.refreshToken);

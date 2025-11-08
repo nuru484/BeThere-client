@@ -8,16 +8,16 @@ import CreateEventPage from "@/pages/dashboard/events/CreateEventPage";
 import UpdateEventPage from "@/pages/dashboard/events/UpdateEventPage";
 import EventsPage from "@/pages/dashboard/events/EventsPage";
 import Event from "@/components/event/Event";
-import AddUserFaceScan from "@/pages/AddUserFaceScan";
-import AttendanceIn from "@/pages/AttendanceIn";
-import AttendanceOut from "@/pages/AttendanceOut";
-import EventAttendancePage from "@/pages/EventAttendancePage";
-import UserAttendancePage from "@/pages/UserAttendancePage";
-import UserEventAttendancePage from "@/pages/UserEventAttendancePage";
-import UsersManagePage from "@/pages/dashboard/users/UsersManagePage";
-import CreateUserPage from "@/pages/dashboard/users/CreateUserPage";
-import EditUserPage from "@/pages/dashboard/users/EditUserPage";
+import AddUserFaceScan from "@/pages/dashboard/AddUserFaceScan";
+import EventSignIn from "@/pages/dashboard/attendance/EventSignIn";
+import EventSignOut from "@/pages/dashboard/attendance/EventSignOut";
+import EventAttendancePage from "@/pages/dashboard/attendance/EventAttendance";
+import UserEventAttendancePage from "@/pages/dashboard/attendance/UserEventAttendance";
+import Userspage from "@/pages/dashboard/users/Users";
+import CreateUserPage from "@/pages/dashboard/users/CreateUser";
+import EditUserPage from "@/pages/dashboard/users/EditUser";
 import DashboardRedirect from "@/pages/dashboard/DashboardRedirect";
+import UserAttendancePage from "@/pages/dashboard/attendance/UserAttendance";
 
 const Routes = () => {
   const protectedRoutes = [
@@ -56,12 +56,12 @@ const Routes = () => {
               element: <UserEventAttendancePage />,
             },
             {
-              path: "/dashboard/attendance",
+              path: "/dashboard/attendance/:userId",
               element: <UserAttendancePage />,
             },
             {
               path: "/dashboard/users",
-              element: <UsersManagePage />,
+              element: <Userspage />,
             },
             {
               path: "/dashboard/users/create",
@@ -77,11 +77,11 @@ const Routes = () => {
             },
             {
               path: "/dashboard/events/:eventId/attendance-in",
-              element: <AttendanceIn />,
+              element: <EventSignIn />,
             },
             {
-              path: "/dashboard/eventS/:eventId/attendance-out",
-              element: <AttendanceOut />,
+              path: "/dashboard/events/:eventId/attendance-out",
+              element: <EventSignOut />,
             },
           ],
         },

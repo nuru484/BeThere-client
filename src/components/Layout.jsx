@@ -7,7 +7,7 @@ export default function Layout() {
     <SidebarProvider>
       <main className="w-full container mx-auto min-h-screen">
         <AppNavbar />
-        <div className="p-4 ">
+        <div className="p-4 md:p-6 lg:p-8">
           <Outlet />
         </div>
       </main>

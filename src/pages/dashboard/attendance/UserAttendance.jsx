@@ -1,22 +1,25 @@
-// src/pages/dashboard/UsersManagePage.jsx
+// src/pages/dashboard/UserAttendancePage.jsx
 import { useState, useCallback } from "react";
-import { Link } from "react-router-dom";
-import { UsersDataTable } from "@/components/users/table/UsersDataTable";
+import { useParams } from "react-router-dom";
+import { AttendanceDataTable } from "@/components/attendance/userAttendance/table/AttendanceDataTable";
 import { DataTableSkeleton } from "@/components/ui/DataTableSkeleton";
-import { useGetAllUsers } from "@/hooks/useUsers";
+import { useGetUserAttendance } from "@/hooks/useAttendance";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 
-const UsersManagePage = () => {
+const UserAttendancePage = () => {
+  const { userId } = useParams();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   // Filter states
   const [filters, setFilters] = useState({
     search: undefined,
-    role: undefined,
+    status: undefined,
+    eventType: undefined,
+    startDate: undefined,
+    endDate: undefined,
   });
 
-  // Build query parameters
   const queryParams = {
     page,
     limit: pageSize,
@@ -26,14 +29,18 @@ const UsersManagePage = () => {
   };
 
   const {
-    data: usersData,
+    data: attendanceData,
     isLoading,
     isError,
     error,
     refetch,
-  } = useGetAllUsers(queryParams);
+  } = useGetUserAttendance(userId, queryParams);
 
-  const users = usersData?.data;
+  const attendanceRecords = attendanceData?.data;
+
+  const userName = attendanceRecords?.[0]?.user
+    ? `${attendanceRecords[0].user.firstName} ${attendanceRecords[0].user.lastName}`
+    : "User";
 
   const handlePageChange = (newPage) => setPage(newPage);
 
@@ -52,12 +59,12 @@ const UsersManagePage = () => {
 
   const handleRefresh = () => refetch();
 
-  if (isLoading && !users) {
+  if (isLoading && !attendanceRecords) {
     return <DataTableSkeleton />;
   }
 
   const errorMessage = isError
-    ? error?.response?.data?.message || "An Unknown Error Occurred!"
+    ? error?.message || "An Unknown Error Occurred!"
     : "An Unknown Error Occurred!";
 
   if (isError) {
@@ -69,35 +76,27 @@ const UsersManagePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-6">
+    <div className="min-h-screen">
+      <div className="container mx-auto">
         {/* Header Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold truncate">
-              Users Management
-            </h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              Manage all registered users and their roles
-            </p>
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold truncate">
+                {userName}&apos;s Attendance
+              </h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">
+                View and manage attendance records
+              </p>
+            </div>
           </div>
-
-          <Link
-            to="/dashboard/users/create"
-            className="px-3 py-2 sm:px-4 sm:py-2 bg-foreground text-background 
-               rounded-md shadow cursor-pointer transition-colors duration-200 
-               hover:bg-foreground/90 text-sm sm:text-base font-medium
-               text-center whitespace-nowrap flex-shrink-0"
-          >
-            Add User
-          </Link>
         </div>
 
-        {/* Users Data Table */}
-        <UsersDataTable
-          data={users || []}
+        {/* Attendance Data Table */}
+        <AttendanceDataTable
+          data={attendanceRecords || []}
           loading={isLoading}
-          totalCount={usersData?.meta?.total || 0}
+          totalCount={attendanceData?.pagination?.totalRecords || 0}
           page={page}
           pageSize={pageSize}
           filters={filters}
@@ -111,4 +110,4 @@ const UsersManagePage = () => {
   );
 };
 
-export default UsersManagePage;
+export default UserAttendancePage;
