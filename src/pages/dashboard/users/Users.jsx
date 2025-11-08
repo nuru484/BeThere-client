@@ -57,7 +57,7 @@ const Userspage = () => {
   }
 
   const errorMessage = isError
-    ? error?.response?.data?.message || "An Unknown Error Occurred!"
+    ? error?.message || "An Unknown Error Occurred!"
     : "An Unknown Error Occurred!";
 
   if (isError) {
@@ -69,7 +69,7 @@ const Userspage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <div className="container mx-auto py-6">
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">

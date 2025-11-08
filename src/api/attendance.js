@@ -18,8 +18,15 @@ export const getUserAttendance = async (userId, params = {}) => {
   return await api.get(url);
 };
 
-export const getEventAttendance = async (eventId) =>
-  api.get(`/attendance/events/${eventId}`);
+export const getEventAttendance = async (eventId, params = {}) => {
+  const queryString = buildSearchParams(params);
+
+  const url = `/attendance/events/${eventId}${
+    queryString ? `?${queryString}` : ""
+  }`;
+
+  return await api.get(url);
+};
 
 export const getUserEventAttendance = async (userId, eventId) =>
   api.get(`/attendance/users/${userId}/events/${eventId}`);

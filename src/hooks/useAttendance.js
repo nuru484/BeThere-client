@@ -42,18 +42,20 @@ export const useGetUserAttendance = (userId, params = {}) => {
     staleTime: 1000 * 60 * 5,
     retry: 2,
     keepPreviousData: true,
+    refetchOnReconnect: false,
   });
 };
 
-export const useEventAttendance = (eventId) => {
+export const useGetEventAttendance = (eventId, params = {}) => {
+  const queryKey = ["eventAttendance", eventId, params];
+
   return useQuery({
-    queryKey: ["eventAttendance", eventId],
-    queryFn: () => getEventAttendance(eventId),
+    queryKey,
+    queryFn: () => getEventAttendance(eventId, params),
     staleTime: 1000 * 60 * 5,
     cacheTime: 1000 * 60 * 30,
     retry: 2,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
+    keepPreviousData: true,
     refetchOnReconnect: false,
   });
 };
