@@ -40,8 +40,8 @@ export const updateUserProfilePicture = async (userId, formData) => {
   return await api.patch(`/users/${userId}/profile-picture`, formData);
 };
 
-export const changePassword = async (userId, data) =>
-  await api.patch(`/users/${userId}/password`, data);
+export const changePassword = async (data) =>
+  await api.patch(`/users/change-password`, data);
 
 // Update user role
 export const updateUserRole = async (userId, role) =>
