@@ -1,6 +1,7 @@
 // src/components/ui/ErrorMessage.jsx
 import PropTypes from "prop-types";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, RefreshCw, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const ErrorMessage = ({
   error,
@@ -8,6 +9,8 @@ const ErrorMessage = ({
   title = "Something went wrong",
   className = "",
 }) => {
+  const navigate = useNavigate();
+
   const getErrorMessage = (error) => {
     if (typeof error === "string") return error;
     if (error instanceof Error) return error.message;
@@ -38,16 +41,28 @@ const ErrorMessage = ({
         </p>
       </div>
 
-      {/* Retry button */}
-      {onRetry && (
+      {/* Action buttons */}
+      <div className="flex items-center gap-3 mt-8">
+        {/* Go back button */}
         <button
-          onClick={onRetry}
-          className="group mt-8 hover:cursor-pointer inline-flex items-center gap-2.5 px-6 py-3 bg-foreground text-background text-sm font-medium rounded-xl hover:bg-foreground/90 active:bg-foreground/95 transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+          onClick={() => navigate(-1)}
+          className="group hover:cursor-pointer inline-flex items-center gap-2.5 px-6 py-3 bg-secondary text-secondary-foreground text-sm font-medium rounded-xl hover:bg-secondary/80 active:bg-secondary/90 transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
         >
-          <RefreshCw className="w-4 h-4 transition-transform group-hover:rotate-180 duration-300" />
-          Try again
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1 duration-300" />
+          Go back
         </button>
-      )}
+
+        {/* Retry button */}
+        {onRetry && (
+          <button
+            onClick={onRetry}
+            className="group hover:cursor-pointer inline-flex items-center gap-2.5 px-6 py-3 bg-foreground text-background text-sm font-medium rounded-xl hover:bg-foreground/90 active:bg-foreground/95 transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+          >
+            <RefreshCw className="w-4 h-4 transition-transform group-hover:rotate-180 duration-300" />
+            Try again
+          </button>
+        )}
+      </div>
     </div>
   );
 };

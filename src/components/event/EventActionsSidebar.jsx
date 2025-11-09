@@ -30,7 +30,7 @@ const EventActionsSidebar = ({ event, isAdmin, onDelete, isDeleting }) => {
   };
 
   const handleEditEvent = () => {
-    navigate(`/dashboard/events/update/${event.id}`);
+    navigate(`/dashboard/events/${event.id}/edit`);
   };
 
   return (

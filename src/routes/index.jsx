@@ -16,7 +16,7 @@ import CreateUserPage from "@/pages/dashboard/users/CreateUser";
 import EditUserPage from "@/pages/dashboard/users/EditUser";
 import DashboardRedirect from "@/pages/dashboard/DashboardRedirect";
 import UserAttendancePage from "@/pages/dashboard/attendance/UserAttendance";
-import EventDetailsPage from "@/pages/dashboard/events/EventDetails";
+import EventDetailsPage from "@/pages/dashboard/events/EventDetailsPage";
 import EventsPage from "@/pages/dashboard/events/Events";
 
 const Routes = () => {
