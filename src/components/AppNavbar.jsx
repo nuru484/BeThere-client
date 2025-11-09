@@ -1,4 +1,4 @@
-// FULL UPDATED AppNavbar.jsx WITH LOGOUT CONFIRMATION
+// FULL UPDATED AppNavbar.jsx WITH USER PROFILE DROPDOWN
 
 import React, { useState, useEffect } from "react";
 import {
@@ -6,15 +6,14 @@ import {
   UserRoundPen,
   Home,
   Users,
-  LogOut,
   ScanFace,
   Menu,
   X,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth, useLogout } from "@/hooks/useAuth";
-import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { useAuth } from "@/hooks/useAuth";
+import UserProfileDropdown from "@/components/users/user-profile/UserProfileDropdown";
 import logo from "/assets/logo.png";
 
 const getMenuItems = (user) => {
@@ -71,10 +70,8 @@ export function AppNavbar() {
   const { user } = useAuth();
   const location = useLocation();
   const items = React.useMemo(() => getMenuItems(user), [user]);
-  const logout = useLogout();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Check responsive layout
   useEffect(() => {
@@ -173,40 +170,40 @@ export function AppNavbar() {
                 );
               })}
 
-              {/* Desktop Logout */}
+              {/* Desktop User Profile */}
               <div className="flex items-center ml-4 pl-4 border-l border-gray-200">
-                <button
-                  onClick={() => setShowLogoutConfirm(true)}
-                  className="flex items-center px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all duration-200 whitespace-nowrap"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  <span>Logout</span>
-                </button>
+                <UserProfileDropdown />
               </div>
             </div>
           )}
 
-          {/* Mobile Menu Toggle */}
+          {/* Mobile View - Profile and Menu Toggle */}
           {isMobileView && (
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2.5 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-emerald-600 transition-colors"
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
-                  key={isMenuOpen ? "close" : "open"}
-                  initial={{ rotate: -90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: 90, opacity: 0 }}
-                >
-                  {isMenuOpen ? (
-                    <X className="h-6 w-6" />
-                  ) : (
-                    <Menu className="h-6 w-6" />
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            </button>
+            <div className="flex items-center space-x-3">
+              {/* Mobile User Profile */}
+              <UserProfileDropdown />
+
+              {/* Mobile Menu Toggle */}
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="inline-flex items-center justify-center p-2.5 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-emerald-600 transition-colors"
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={isMenuOpen ? "close" : "open"}
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                  >
+                    {isMenuOpen ? (
+                      <X className="h-6 w-6" />
+                    ) : (
+                      <Menu className="h-6 w-6" />
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -252,43 +249,10 @@ export function AppNavbar() {
                   </motion.div>
                 );
               })}
-
-              {/* Mobile Logout */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: items.length * 0.05 }}
-              >
-                <button
-                  onClick={() => {
-                    handleNavClick();
-                    setShowLogoutConfirm(true);
-                  }}
-                  className="w-full flex items-center px-4 py-3 mt-2 rounded-lg text-base font-medium text-red-600 hover:bg-red-50 border-t border-gray-200 pt-4"
-                >
-                  <LogOut className="mr-3 h-5 w-5" />
-                  <span>Logout</span>
-                </button>
-              </motion.div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Logout Confirmation Dialog */}
-      <ConfirmationDialog
-        open={showLogoutConfirm}
-        onOpenChange={setShowLogoutConfirm}
-        title="Confirm Logout"
-        description="Are you sure you want to sign out of your account?"
-        confirmText="Logout"
-        cancelText="Cancel"
-        isDestructive={true}
-        onConfirm={() => {
-          setShowLogoutConfirm(false);
-          logout();
-        }}
-      />
     </nav>
   );
 }
