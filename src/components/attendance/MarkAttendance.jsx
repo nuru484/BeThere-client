@@ -14,6 +14,7 @@ import toast from "react-hot-toast";
 import ErrorMessage from "../ui/ErrorMessage";
 import { LogIn, LogOut, ArrowLeft, MapPin } from "lucide-react";
 import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
+import { Button } from "@/components/ui/button";
 
 export default function MarkAttendance({ type = "in" }) {
   const { user } = useAuth();
@@ -309,50 +310,58 @@ export default function MarkAttendance({ type = "in" }) {
     : "from-orange-500 to-orange-600";
 
   return (
-    <div className="container mx-auto max-w-6xl">
-      <div>
-        {/* Back Button - Mobile Only */}
-        <button
-          onClick={() => navigate(`/dashboard/events/${eventId}`)}
-          className="inline-flex lg:hidden items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg border border-input hover:bg-accent"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span className="hidden xs:inline">Back to Event</span>
-          <span className="xs:hidden">Back</span>
-        </button>
-
-        {/* Header with Back Button (Desktop) */}
-        <div className="flex items-center justify-between pb-6 border-b">
-          <div className="flex items-center gap-3">
-            <div
-              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${gradientColors} flex items-center justify-center shadow-sm`}
+    <div className="min-h-screen">
+      <div className="container mx-auto max-w-6xl space-y-4 sm:space-y-6">
+        {/* Header Section */}
+        <div className="space-y-3 sm:space-y-0">
+          {/* Back Button - Mobile Only */}
+          <div className="flex justify-end sm:hidden">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-gray-200 text-gray-700 hover:bg-gray-50 h-8"
+              onClick={() => navigate(`/dashboard/events/${eventId}`)}
             >
-              <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-                Mark Attendance {isCheckIn ? "In" : "Out"}
-              </h1>
-              <p className="text-sm sm:text-base text-muted-foreground mt-0.5">
-                {isCheckIn
-                  ? "Check in to the event with face verification"
-                  : "Check out from the event with face verification"}
-              </p>
-            </div>
+              <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
+              Back
+            </Button>
           </div>
 
-          {/* Back Button - Desktop Only */}
-          <button
-            onClick={() => navigate(`/dashboard/events/${eventId}`)}
-            className="hidden lg:inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg border border-input hover:bg-accent"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Event
-          </button>
+          {/* Header with Back Button */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-2.5 sm:gap-3 flex-1 min-w-0">
+              <div
+                className={`w-9 h-9 sm:w-12 sm:h-12 flex-shrink-0 rounded-xl bg-gradient-to-br ${gradientColors} flex items-center justify-center shadow-sm`}
+              >
+                <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 leading-tight break-words">
+                  Mark Attendance {isCheckIn ? "In" : "Out"}
+                </h1>
+                <p className="text-xs sm:text-sm md:text-base text-muted-foreground mt-1 sm:mt-1.5 leading-snug">
+                  {isCheckIn
+                    ? "Check in to the event with face verification"
+                    : "Check out from the event with face verification"}
+                </p>
+              </div>
+            </div>
+
+            {/* Back Button - Desktop Only */}
+            <Button
+              variant="outline"
+              className="hidden sm:flex border-gray-200 text-gray-700 hover:bg-gray-50 flex-shrink-0"
+              onClick={() => navigate(`/dashboard/events/${eventId}`)}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+          </div>
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid lg:grid-cols-3 gap-6 pt-6">
+        <div className="grid lg:grid-cols-3 gap-6">
           {/* Left Column - Side Cards (Hidden on Mobile) */}
           <div className="hidden lg:flex lg:flex-col gap-6">
             {/* Location Status Notice */}
