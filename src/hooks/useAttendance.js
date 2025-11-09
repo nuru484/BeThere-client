@@ -24,7 +24,8 @@ export const useUpdateAttendance = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ eventId, data }) => updateAttendance(eventId, data),
+    mutationFn: ({ eventId, attendanceData }) =>
+      updateAttendance(eventId, attendanceData),
     onSuccess: (data, { eventId }) => {
       queryClient.invalidateQueries(["attendance", eventId]);
       queryClient.invalidateQueries(["attendance"]);

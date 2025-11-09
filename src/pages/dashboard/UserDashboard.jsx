@@ -50,8 +50,6 @@ const UserDashboard = () => {
   const attendance = attendanceData?.data || {};
   const { summary, attendanceByDate } = attendance;
 
-  console.log(attendanceByDate);
-
   const recentEvents = recentEventsData?.data || [];
 
   return (

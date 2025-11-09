@@ -42,28 +42,23 @@ const EventActionsSidebar = ({ event, isAdmin, onDelete, isDeleting }) => {
           </h3>
         </CardHeader>
         <CardContent className="space-y-3">
-          {/* User Actions - Sign In/Out */}
-          {!isAdmin && (
-            <>
-              <Button
-                variant="outline"
-                className="w-full justify-start border-emerald-200 text-emerald-700 hover:bg-emerald-50 text-sm"
-                onClick={handleSignIn}
-              >
-                <LogIn className="w-4 h-4 mr-3" />
-                Sign In to Event
-              </Button>
+          <Button
+            variant="outline"
+            className="w-full justify-start border-emerald-200 text-emerald-700 hover:bg-emerald-50 text-sm"
+            onClick={handleSignIn}
+          >
+            <LogIn className="w-4 h-4 mr-3" />
+            Sign In to Event
+          </Button>
 
-              <Button
-                variant="outline"
-                className="w-full justify-start border-teal-200 text-teal-700 hover:bg-teal-50 text-sm"
-                onClick={handleSignOut}
-              >
-                <LogOut className="w-4 h-4 mr-3" />
-                Sign Out of Event
-              </Button>
-            </>
-          )}
+          <Button
+            variant="outline"
+            className="w-full justify-start border-teal-200 text-teal-700 hover:bg-teal-50 text-sm"
+            onClick={handleSignOut}
+          >
+            <LogOut className="w-4 h-4 mr-3" />
+            Sign Out of Event
+          </Button>
 
           {/* Admin Actions */}
           {isAdmin && (

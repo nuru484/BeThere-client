@@ -10,6 +10,7 @@ import {
   CalendarCheck,
   Search,
   Loader2,
+  ScanFace,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
@@ -43,17 +44,20 @@ import { Input } from "@/components/ui/input";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useUpdateUserRole, useDeleteUser } from "@/hooks/useUsers";
 import { useGetEvents } from "@/hooks/useEvent";
+import { useDeleteFaceScan } from "@/hooks/useFaceScanApi";
 import PropTypes from "prop-types";
 
 export function UserActionsDropdown({ user }) {
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [faceScanDialogOpen, setFaceScanDialogOpen] = useState(false);
   const [eventSelectionOpen, setEventSelectionOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEventId, setSelectedEventId] = useState(null);
 
   const updateUserRoleMutation = useUpdateUserRole();
   const deleteUserMutation = useDeleteUser();
+  const deleteFaceScanMutation = useDeleteFaceScan();
 
   // Fetch events with search
   const { data: eventsData, isLoading: isEventsLoading } = useGetEvents({
@@ -96,6 +100,23 @@ export function UserActionsDropdown({ user }) {
     }
   };
 
+  const handleResetFaceScan = async () => {
+    const toastId = toast.loading("Resetting face scan...");
+
+    try {
+      const response = await deleteFaceScanMutation.mutateAsync({
+        userId: user.id,
+      });
+      toast.dismiss(toastId);
+      toast.success(response.message || "Face scan reset successfully");
+      setFaceScanDialogOpen(false);
+    } catch (error) {
+      toast.dismiss(toastId);
+      toast.error(error.message || "Failed to reset face scan");
+      setFaceScanDialogOpen(false);
+    }
+  };
+
   const handleEventSelection = () => {
     if (selectedEventId) {
       navigate(
@@ -117,6 +138,8 @@ export function UserActionsDropdown({ user }) {
     { value: "ADMIN", label: "Admin" },
     { value: "USER", label: "User" },
   ];
+
+  const hasFaceScan = user.faceScan !== null && user.faceScan !== undefined;
 
   return (
     <>
@@ -188,6 +211,16 @@ export function UserActionsDropdown({ user }) {
 
           <DropdownMenuSeparator />
 
+          {hasFaceScan && (
+            <DropdownMenuItem
+              className="text-orange-600 hover:cursor-pointer"
+              onClick={() => setFaceScanDialogOpen(true)}
+            >
+              <ScanFace className="mr-2 h-4 w-4" />
+              Reset Face Scan
+            </DropdownMenuItem>
+          )}
+
           <DropdownMenuItem
             className="text-red-600 hover:cursor-pointer"
             onClick={() => setDeleteDialogOpen(true)}
@@ -206,6 +239,17 @@ export function UserActionsDropdown({ user }) {
         description={`Are you sure you want to delete "${user.firstName} ${user.lastName}"? This action cannot be undone.`}
         onConfirm={handleDeleteUser}
         confirmText="Delete"
+        cancelText="Cancel"
+        isDestructive={true}
+      />
+
+      <ConfirmationDialog
+        open={faceScanDialogOpen}
+        onOpenChange={setFaceScanDialogOpen}
+        title="Reset Face Scan"
+        description={`Are you sure you want to reset the face scan data for "${user.firstName} ${user.lastName}"? This will require them to register their face again for attendance.`}
+        onConfirm={handleResetFaceScan}
+        confirmText="Reset Face Scan"
         cancelText="Cancel"
         isDestructive={true}
       />
@@ -328,5 +372,6 @@ UserActionsDropdown.propTypes = {
     lastName: PropTypes.string.isRequired,
     email: PropTypes.string,
     role: PropTypes.oneOf(["ADMIN", "USER"]).isRequired,
+    faceScan: PropTypes.object,
   }).isRequired,
 };
