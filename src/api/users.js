@@ -23,29 +23,36 @@ export const getUsers = async (params = {}) => {
 };
 
 // Get single user by ID
-export const getUserById = async (userId) => {
-  return await api.get(`/users/${userId}`);
-};
+export const getUserById = async (userId) => await api.get(`/users/${userId}`);
 
 // Add/Create new user
-export const addUser = async (userData) => {
-  return await api.post("/users", userData);
-};
+export const addUser = async (userData) => await api.post("/users", userData);
 
 // Update user profile
-export const updateUser = async (userId, userData) => {
-  return await api.put(`/users/${userId}`, userData);
+export const updateUserProfile = async (userId, userData) =>
+  await api.put(`/users/${userId}`, userData);
+
+/**
+ * Updates a user profile with form data (e.g., text fields + file uploads).
+ * @param {string|number} userId - The ID of the user to update.
+ * @param {FormData} formData - Instance of FormData containing the fields and files.
+ * @returns {Promise} - Resolved promise with the server response.
+ */
+export const updateUserProfilePicture = async (userId, formData) => {
+  if (!(formData instanceof FormData)) {
+    throw new Error("The second argument must be an instance of FormData");
+  }
+
+  return await api.patch(`/users/${userId}`, formData);
 };
 
 // Update user role
-export const updateUserRole = async (userId, role) => {
-  return await api.patch(`/users/${userId}/role`, { role });
-};
+export const updateUserRole = async (userId, role) =>
+  await api.patch(`/users/${userId}/role`, { role });
 
 // Delete single user
-export const deleteUser = async (userId) => {
-  return await api.delete(`/users/${userId}`);
-};
+export const deleteUser = async (userId) =>
+  await api.delete(`/users/${userId}`);
 
 // Delete all users
 export const deleteAllUsers = async (confirmData) => {

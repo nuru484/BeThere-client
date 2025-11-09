@@ -8,6 +8,7 @@ import {
   deleteUser,
   deleteAllUsers,
   updateUserRole,
+  updateUserProfilePicture,
 } from "@/api/users";
 
 // Get all users with pagination and filters
@@ -24,14 +25,13 @@ export const useGetAllUsers = (params = {}) => {
 };
 
 // Get single user by ID
-export const useGetUser = (userId, options = {}) => {
+export const useGetUser = (userId) => {
   return useQuery({
     queryKey: ["user", userId],
     queryFn: () => getUserById(userId),
     staleTime: 1000 * 60 * 5,
     retry: 2,
     enabled: !!userId,
-    ...options,
   });
 };
 
@@ -48,11 +48,24 @@ export const useAddUser = () => {
 };
 
 // Update user profile
-export const useUpdateUser = () => {
+export const useUpdateUserProfile = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ userId, userData }) => updateUser(userId, userData),
+    onSuccess: (data, { userId }) => {
+      queryClient.invalidateQueries(["user", userId]);
+      queryClient.invalidateQueries(["users"]);
+    },
+  });
+};
+
+export const useUpdateUserProfilePicture = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ userId, formData }) =>
+      updateUserProfilePicture(userId, formData),
     onSuccess: (data, { userId }) => {
       queryClient.invalidateQueries(["user", userId]);
       queryClient.invalidateQueries(["users"]);
