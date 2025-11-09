@@ -1,0 +1,138 @@
+// src/components/dashboard/user/UserEventTypeChart.jsx
+import PropTypes from "prop-types";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Legend,
+  Tooltip,
+} from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+const UserEventTypeChart = ({ eventTypeBreakdown }) => {
+  const data = [
+    {
+      name: "Recurring Events",
+      value: eventTypeBreakdown?.recurring || 0,
+      color: "#8b5cf6",
+    },
+    {
+      name: "Non-Recurring Events",
+      value: eventTypeBreakdown?.nonRecurring || 0,
+      color: "#06b6d4",
+    },
+  ].filter((item) => item.value > 0);
+
+  if (data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Event Type Distribution</CardTitle>
+        </CardHeader>
+        <CardContent className="h-80 flex items-center justify-center">
+          <p className="text-muted-foreground">No event data available</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const total = data.reduce((sum, item) => sum + item.value, 0);
+      const percentage = ((payload[0].value / total) * 100).toFixed(2);
+      return (
+        <div className="bg-white p-3 border border-gray-200 rounded shadow-lg">
+          <p className="font-semibold">{payload[0].name}</p>
+          <p className="text-sm">Count: {payload[0].value}</p>
+          <p className="text-sm">Percentage: {percentage}%</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  CustomTooltip.propTypes = {
+    active: PropTypes.bool,
+    payload: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string,
+        value: PropTypes.number,
+      })
+    ),
+  };
+
+  const renderCustomLabel = ({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    percent,
+  }) => {
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * (Math.PI / 180));
+    const y = cy + radius * Math.sin(-midAngle * (Math.PI / 180));
+
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="white"
+        textAnchor={x > cx ? "start" : "end"}
+        dominantBaseline="central"
+        className="font-semibold text-sm"
+      >
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    );
+  };
+
+  renderCustomLabel.propTypes = {
+    cx: PropTypes.number,
+    cy: PropTypes.number,
+    midAngle: PropTypes.number,
+    innerRadius: PropTypes.number,
+    outerRadius: PropTypes.number,
+    percent: PropTypes.number,
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>My Event Type Distribution</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={350}>
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              label={renderCustomLabel}
+              outerRadius={120}
+              fill="#8884d8"
+              dataKey="value"
+            >
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip content={<CustomTooltip />} />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
+  );
+};
+
+UserEventTypeChart.propTypes = {
+  eventTypeBreakdown: PropTypes.shape({
+    recurring: PropTypes.number,
+    nonRecurring: PropTypes.number,
+  }),
+};
+
+export default UserEventTypeChart;

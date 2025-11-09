@@ -1,51 +1,148 @@
 // src/pages/UserDashboard.jsx
-import { useGetUserDashboardTotals } from "@/hooks/useDashboard";
+import { useState } from "react";
+import {
+  useGetUserDashboardTotals,
+  useGetUserAttendanceData,
+  useGetRecentEvents,
+} from "@/hooks/useDashboard";
 import DashboardTotalsCard from "@/components/dashboard/DashboardTotalsCard";
-import { Loader2 } from "lucide-react";
+import DashboardTotalsCardSkeleton from "@/components/dashboard/skeletons/DashboardTotalsCardSkeleton";
+import DashboardTotalsCardError from "@/components/dashboard/DashboardTotalsCardError";
+import DateRangeSelector from "@/components/dashboard/DateRangeSelector";
+import UserAttendanceSummaryCards from "@/components/dashboard/user/UserAttendanceSummaryCards";
+import UserAttendanceLineChart from "@/components/dashboard/user/UserAttendanceLineChart";
+import UserStatusPieChart from "@/components/dashboard/user/UserStatusPieChart";
+import UserEventTypeChart from "@/components/dashboard/user/UserEventTypeChart";
+import RecentEventsList from "@/components/dashboard/RecentEventsList";
+import AttendanceDataSkeleton from "@/components/dashboard/skeletons/AttendanceDataSkeleton";
+import AttendanceCardsError from "@/components/dashboard/AttendanceCardsError";
 import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
+import { format, subDays } from "date-fns";
+import { Loader2 } from "lucide-react";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 
 const UserDashboard = () => {
   const { data, isLoading, isError, error, refetch } =
     useGetUserDashboardTotals();
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-2">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
+  const [dateRange, setDateRange] = useState({
+    startDate: format(subDays(new Date(), 30), "yyyy-MM-dd"),
+    endDate: format(new Date(), "yyyy-MM-dd"),
+  });
 
-  const { message } = extractApiErrorMessage(error);
+  const {
+    data: attendanceData,
+    isLoading: isAttendanceLoading,
+    isError: isAttendanceError,
+    error: attendanceError,
+    refetch: refetchAttendance,
+  } = useGetUserAttendanceData(dateRange);
 
-  if (isError) {
-    return (
-      <div className="flex items-center justify-center min-h-96 px-4">
-        <ErrorMessage error={message} onRetry={refetch} />
-      </div>
-    );
-  }
+  const {
+    data: recentEventsData,
+    isLoading: isEventsLoading,
+    isError: isEventsError,
+    error: eventsError,
+    refetch: refetchEvents,
+  } = useGetRecentEvents();
 
   const totals = data?.data || {};
+  const attendance = attendanceData?.data || {};
+  const { summary, attendanceByDate } = attendance;
+
+  console.log(attendanceByDate);
+
+  const recentEvents = recentEventsData?.data || [];
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">My Dashboard</h1>
-        <p className="text-muted-foreground">
-          Your personal overview of events and sessions
-        </p>
-      </div>
+    <div className="w-full min-h-screen">
+      <div className="container mx-auto space-y-6">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight break-words">
+            My Dashboard
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Your personal overview of events and attendance
+          </p>
+        </div>
 
-      <DashboardTotalsCard totals={totals} isAdmin={false} />
+        {/* Dashboard Totals Section */}
+        {isLoading ? (
+          <DashboardTotalsCardSkeleton />
+        ) : isError ? (
+          <DashboardTotalsCardError
+            error={extractApiErrorMessage(error).message}
+            onRetry={refetch}
+          />
+        ) : (
+          <DashboardTotalsCard totals={totals} isAdmin={false} />
+        )}
 
-      {/* Additional user-specific content can go here */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Placeholder for recent events or attendance history */}
+        {/* Date Range Selector */}
+        <DateRangeSelector
+          onDateChange={setDateRange}
+          isLoading={isAttendanceLoading}
+        />
+
+        {/* Attendance Data Section */}
+        {isAttendanceLoading ? (
+          <AttendanceDataSkeleton />
+        ) : isAttendanceError ? (
+          <AttendanceCardsError
+            error={extractApiErrorMessage(attendanceError).message}
+            onRetry={refetchAttendance}
+          />
+        ) : (
+          summary && (
+            <>
+              {/* Summary Cards */}
+              <UserAttendanceSummaryCards summary={summary} />
+
+              {/* Charts */}
+              {attendanceByDate && attendanceByDate.length > 0 && (
+                <div className="space-y-6">
+                  {/* Line Chart */}
+                  <div className="w-full overflow-hidden">
+                    <UserAttendanceLineChart data={attendanceByDate} />
+                  </div>
+
+                  {/* Pie Charts */}
+                  <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+                    <div className="w-full overflow-hidden">
+                      <UserStatusPieChart
+                        statusBreakdown={summary.statusBreakdown}
+                      />
+                    </div>
+                    <div className="w-full overflow-hidden">
+                      <UserEventTypeChart
+                        eventTypeBreakdown={summary.eventTypeBreakdown}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )
+        )}
+
+        {/* Recent Events Section */}
+        <div className="w-full">
+          {isEventsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : isEventsError ? (
+            <div className="flex items-center justify-center py-8">
+              <ErrorMessage
+                error={extractApiErrorMessage(eventsError).message}
+                onRetry={refetchEvents}
+                title="Failed to load recent events"
+              />
+            </div>
+          ) : (
+            <RecentEventsList events={recentEvents} />
+          )}
+        </div>
       </div>
     </div>
   );
