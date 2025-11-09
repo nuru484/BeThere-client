@@ -32,19 +32,16 @@ export const addUser = async (userData) => await api.post("/users", userData);
 export const updateUserProfile = async (userId, userData) =>
   await api.put(`/users/${userId}`, userData);
 
-/**
- * Updates a user profile with form data (e.g., text fields + file uploads).
- * @param {string|number} userId - The ID of the user to update.
- * @param {FormData} formData - Instance of FormData containing the fields and files.
- * @returns {Promise} - Resolved promise with the server response.
- */
 export const updateUserProfilePicture = async (userId, formData) => {
   if (!(formData instanceof FormData)) {
     throw new Error("The second argument must be an instance of FormData");
   }
 
-  return await api.patch(`/users/${userId}`, formData);
+  return await api.patch(`/users/${userId}/profile-picture`, formData);
 };
+
+export const changePassword = async (userId, data) =>
+  await api.patch(`/users/${userId}/password`, data);
 
 // Update user role
 export const updateUserRole = async (userId, role) =>

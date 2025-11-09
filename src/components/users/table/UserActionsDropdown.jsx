@@ -156,7 +156,7 @@ export function UserActionsDropdown({ user }) {
 
           {/* View User Details */}
           <DropdownMenuItem
-            onClick={() => navigate(`/dashboard/users/${user.id}/user-profile`)}
+            onClick={() => navigate(`/dashboard/users/${user.id}/profile`)}
             className="hover:cursor-pointer"
           >
             <User className="mr-2 h-4 w-4" />

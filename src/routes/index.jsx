@@ -18,6 +18,7 @@ import DashboardRedirect from "@/pages/dashboard/DashboardRedirect";
 import UserAttendancePage from "@/pages/dashboard/attendance/UserAttendance";
 import EventDetailsPage from "@/pages/dashboard/events/EventDetailsPage";
 import EventsPage from "@/pages/dashboard/events/Events";
+import UserProfilePage from "@/pages/dashboard/users/UserProfilePage";
 
 const Routes = () => {
   const protectedRoutes = [
@@ -62,6 +63,10 @@ const Routes = () => {
             {
               path: "/dashboard/users",
               element: <Userspage />,
+            },
+            {
+              path: "/dashboard/users/:userId/profile",
+              element: <UserProfilePage />,
             },
             {
               path: "/dashboard/users/create",

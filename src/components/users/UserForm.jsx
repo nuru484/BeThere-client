@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
-import { useAddUser, useUpdateUser } from "@/hooks/useUsers";
+import { useAddUser, useUpdateUserProfile } from "@/hooks/useUsers";
 import PropTypes from "prop-types";
 import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
 
@@ -47,7 +47,7 @@ export default function UserForm({ mode, user }) {
   // Mutations
   const { mutateAsync: createUser, isLoading: isCreating } = useAddUser();
   const { mutateAsync: updateUserProfile, isLoading: isUpdating } =
-    useUpdateUser();
+    useUpdateUserProfile();
 
   const defaultValues = useMemo(
     () => ({

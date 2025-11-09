@@ -4,11 +4,12 @@ import {
   getUsers,
   getUserById,
   addUser,
-  updateUser,
+  updateUserProfile,
   deleteUser,
   deleteAllUsers,
   updateUserRole,
   updateUserProfilePicture,
+  changePassword,
 } from "@/api/users";
 
 // Get all users with pagination and filters
@@ -25,13 +26,14 @@ export const useGetAllUsers = (params = {}) => {
 };
 
 // Get single user by ID
-export const useGetUser = (userId) => {
+export const useGetUser = (userId, options = {}) => {
   return useQuery({
     queryKey: ["user", userId],
     queryFn: () => getUserById(userId),
     staleTime: 1000 * 60 * 5,
     retry: 2,
     enabled: !!userId,
+    ...options,
   });
 };
 
@@ -52,7 +54,7 @@ export const useUpdateUserProfile = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, userData }) => updateUser(userId, userData),
+    mutationFn: ({ userId, userData }) => updateUserProfile(userId, userData),
     onSuccess: (data, { userId }) => {
       queryClient.invalidateQueries(["user", userId]);
       queryClient.invalidateQueries(["users"]);
@@ -68,6 +70,17 @@ export const useUpdateUserProfilePicture = () => {
       updateUserProfilePicture(userId, formData),
     onSuccess: (data, { userId }) => {
       queryClient.invalidateQueries(["user", userId]);
+      queryClient.invalidateQueries(["users"]);
+    },
+  });
+};
+
+export const useChangePassword = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ data }) => changePassword(data),
+    onSuccess: () => {
       queryClient.invalidateQueries(["users"]);
     },
   });

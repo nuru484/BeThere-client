@@ -92,7 +92,7 @@ const UserProfileDropdown = () => {
           {/* Profile Link */}
           <DropdownMenuItem
             onClick={() =>
-              handleNavigation(`/dashboard/users/${user.id}/user-profile`)
+              handleNavigation(`/dashboard/users/${user.id}/profile`)
             }
             className="cursor-pointer px-4 py-2 hover:bg-accent focus:bg-accent text-foreground flex items-center"
           >
