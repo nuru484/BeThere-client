@@ -6,6 +6,7 @@ import {
   createEvent,
   updateEvent,
   deleteEvent,
+  deleteAllEvents,
 } from "@/api/event";
 
 export const useGetEvent = (eventId) => {
@@ -63,6 +64,17 @@ export const useDeleteEvent = () => {
     mutationFn: ({ eventId }) => deleteEvent(eventId),
     onSuccess: (eventId) => {
       queryClient.invalidateQueries(["event", eventId]);
+      queryClient.invalidateQueries(["events"]);
+    },
+  });
+};
+
+export const useDeleteAllEvents = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteAllEvents,
+    onSuccess: () => {
       queryClient.invalidateQueries(["events"]);
     },
   });

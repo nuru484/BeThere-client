@@ -6,7 +6,6 @@ import ErrorPage from "@/pages/ErrorPage";
 import Layout from "@/components/Layout";
 import CreateEventPage from "@/pages/dashboard/events/CreateEvent";
 import UpdateEventPage from "@/pages/dashboard/events/UpdateEvent";
-import EventsPage from "@/pages/dashboard/events/EventsPage";
 import AddUserFaceScan from "@/pages/dashboard/AddUserFaceScan";
 import EventSignIn from "@/pages/dashboard/attendance/EventSignIn";
 import EventSignOut from "@/pages/dashboard/attendance/EventSignOut";
@@ -18,6 +17,7 @@ import EditUserPage from "@/pages/dashboard/users/EditUser";
 import DashboardRedirect from "@/pages/dashboard/DashboardRedirect";
 import UserAttendancePage from "@/pages/dashboard/attendance/UserAttendance";
 import EventDetailsPage from "@/pages/dashboard/events/EventDetails";
+import EventsPage from "@/pages/dashboard/events/Events";
 
 const Routes = () => {
   const protectedRoutes = [
@@ -44,7 +44,7 @@ const Routes = () => {
               element: <CreateEventPage />,
             },
             {
-              path: "/dashboard/events/update/:eventId",
+              path: "/dashboard/events/:eventId/edit",
               element: <UpdateEventPage />,
             },
             {
