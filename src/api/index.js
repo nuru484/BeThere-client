@@ -21,6 +21,7 @@ const api = axios.create({
   },
 });
 
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
     const accessToken = encryptStorage.getItem("accessToken");
@@ -32,6 +33,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Response interceptor for token refresh
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -71,6 +73,14 @@ api.interceptors.response.use(
         console.error("Token refresh failed", err);
         encryptStorage.removeItem("accessToken");
         encryptStorage.removeItem("refreshToken");
+        return Promise.reject({
+          status: 401,
+          data: {
+            status: "error",
+            message: "Session expired. Please log in again.",
+            type: "AUTH_ERROR",
+          },
+        });
       }
     }
 
@@ -78,38 +88,119 @@ api.interceptors.response.use(
   }
 );
 
-// Add a response interceptor
+// Main error handling interceptor
 api.interceptors.response.use(
   (response) => {
     return response.data;
   },
   async (error) => {
+    // Structure the error in a format compatible with extractApiErrorMessage
+    const standardizedError = {
+      status: error.response?.status || 0,
+      data: null,
+    };
+
     if (error.response) {
-      const { data, status } = error.response;
+      // Server responded with an error
+      const { data } = error.response;
 
-      let message = "An error occurred";
+      standardizedError.data = {
+        status: "error",
+        message: data.message || "An error occurred",
+        type: data.type || "UNKNOWN_ERROR",
+      };
 
+      // Add errorId and code if present
+      if (data.errorId) {
+        standardizedError.data.errorId = data.errorId;
+      }
+      if (data.code) {
+        standardizedError.data.code = data.code;
+      }
+
+      if (data.details && typeof data.details === "object") {
+        // Check if details contains an errors array
+        if (Array.isArray(data.details.errors)) {
+          standardizedError.data.details = {
+            errors: data.details.errors,
+          };
+        }
+        // Check if details contains fieldErrors object
+        else if (
+          data.details.fieldErrors &&
+          typeof data.details.fieldErrors === "object"
+        ) {
+          standardizedError.data.details = {
+            fieldErrors: data.details.fieldErrors,
+          };
+        } else if (Object.keys(data.details).length > 0) {
+          standardizedError.data.details = {
+            fieldErrors: data.details,
+          };
+        }
+      }
+
+      // Handle field errors in various formats at root level
       if (data.errors && Array.isArray(data.errors)) {
-        message = data.errors.map((err) => err.message).join(", ");
-      } else if (data.message) {
-        message = data.message;
+        // Check if errors are field-level errors
+        const hasFieldErrors = data.errors.some(
+          (err) => err && typeof err === "object" && "field" in err
+        );
+
+        if (hasFieldErrors) {
+          if (!standardizedError.data.details) {
+            standardizedError.data.details = {};
+          }
+          standardizedError.data.details.errors = data.errors;
+        } else {
+          // Non-field errors (general error messages)
+          const errorMessages = data.errors
+            .map((err) => err.message || String(err))
+            .filter(Boolean);
+
+          if (errorMessages.length > 0) {
+            standardizedError.data.message = errorMessages.join(", ");
+          }
+        }
       }
 
-      const type = data.type || "UNKNOWN_ERROR";
-      const details = data.errors || null;
-
-      if (status === 400 || status === 422) {
-        throw new APIError(message, status, "VALIDATION_ERROR", details);
+      // Handle direct fieldErrors object
+      if (data.fieldErrors && typeof data.fieldErrors === "object") {
+        if (!standardizedError.data.details) {
+          standardizedError.data.details = {};
+        }
+        standardizedError.data.details.fieldErrors = data.fieldErrors;
       }
 
-      throw new APIError(message, status, type);
+      // Handle direct errors object
+      if (
+        data.errors &&
+        typeof data.errors === "object" &&
+        !Array.isArray(data.errors)
+      ) {
+        standardizedError.data.errors = data.errors;
+      }
     } else if (error.request) {
-      throw new APIError("Network error", 0, "NETWORK_ERROR");
+      // Request was made but no response received
+      standardizedError.status = "FETCH_ERROR";
+      standardizedError.error = "Network error - unable to connect to server";
+    } else if (
+      error.code === "ECONNABORTED" ||
+      error.message?.includes("timeout")
+    ) {
+      // Timeout error
+      standardizedError.status = "TIMEOUT_ERROR";
     } else if (error.message === "canceled") {
-      throw new APIError("Request was aborted", 0, "ABORT_ERROR");
+      // Request was cancelled
+      standardizedError.status = "CANCELLED";
+      standardizedError.error = "Request was cancelled";
+    } else {
+      // Something else happened
+      standardizedError.status = "UNKNOWN_ERROR";
+      standardizedError.error = error.message || "An unexpected error occurred";
     }
 
-    throw new APIError("An unexpected error occurred", 0, "UNEXPECTED_ERROR");
+    return Promise.reject(standardizedError);
   }
 );
 

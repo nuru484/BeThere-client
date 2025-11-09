@@ -10,6 +10,7 @@ export const extractApiErrorMessage = (error) => {
   }
 
   if (typeof error === "object" && error !== null) {
+    // Handle axios/network-specific errors
     if (
       "status" in error &&
       error.status === "FETCH_ERROR" &&
@@ -37,6 +38,11 @@ export const extractApiErrorMessage = (error) => {
       return { message: "Request timed out", hasFieldErrors: false };
     }
 
+    if ("status" in error && error.status === "CANCELLED") {
+      return { message: "Request was cancelled", hasFieldErrors: false };
+    }
+
+    // Main error handling for API responses
     if ("status" in error && "data" in error) {
       const { data } = error;
 
@@ -54,6 +60,7 @@ export const extractApiErrorMessage = (error) => {
             hasFieldErrors: false,
           };
 
+          // Add errorId and code if present
           if ("errorId" in data && typeof data.errorId === "string") {
             result.errorId = data.errorId;
           }
@@ -61,6 +68,7 @@ export const extractApiErrorMessage = (error) => {
             result.code = data.code;
           }
 
+          // Handle field errors in details.errors array format
           if (
             "details" in data &&
             data.details &&
@@ -97,6 +105,7 @@ export const extractApiErrorMessage = (error) => {
             }
           }
 
+          // Handle field errors in details.fieldErrors object format
           if (
             "details" in data &&
             data.details &&
@@ -129,6 +138,7 @@ export const extractApiErrorMessage = (error) => {
           return result;
         }
 
+        // Handle errors object at root level (Laravel-style validation)
         if (
           "errors" in data &&
           typeof data.errors === "object" &&
@@ -161,6 +171,7 @@ export const extractApiErrorMessage = (error) => {
           }
         }
 
+        // Fallback message extraction
         if ("message" in data && typeof data.message === "string") {
           return { message: data.message, hasFieldErrors: false };
         }
@@ -168,6 +179,7 @@ export const extractApiErrorMessage = (error) => {
           return { message: data.error, hasFieldErrors: false };
         }
 
+        // Handle errors array (non-field errors)
         if ("errors" in data && Array.isArray(data.errors)) {
           const message = data.errors
             .map((e) => e.message || String(e))
@@ -176,6 +188,7 @@ export const extractApiErrorMessage = (error) => {
         }
       }
 
+      // HTTP status code messages
       if (typeof error.status === "number") {
         const statusMessages = {
           400: "Bad request",
@@ -193,6 +206,7 @@ export const extractApiErrorMessage = (error) => {
       }
     }
 
+    // Fallback message extraction from error object
     if ("message" in error && typeof error.message === "string") {
       return { message: error.message, hasFieldErrors: false };
     }
