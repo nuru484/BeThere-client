@@ -179,8 +179,8 @@ const ProfileInfoTab = ({ user }) => {
     <div className="space-y-6">
       {/* Header Section */}
       <div className="space-y-1">
-        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
-          <User className="h-6 w-6" />
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2 text-foreground">
+          <User className="h-6 w-6 text-primary" />
           Profile Information
         </h2>
         <p className="text-sm sm:text-base text-muted-foreground">
@@ -191,11 +191,13 @@ const ProfileInfoTab = ({ user }) => {
       {/* Profile Content */}
       <div className="space-y-6">
         {/* Avatar Section */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-4 border border-border rounded-lg bg-muted/30 dark:bg-muted/20">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-5 border-2 border-border rounded-lg bg-card shadow-sm">
           <div className="relative group">
             <Avatar
-              className={`h-24 w-24 ring-2 ${
-                isEditingAvatar ? "ring-brand-orange" : "ring-border"
+              className={`h-24 w-24 ring-4 transition-all duration-200 ${
+                isEditingAvatar
+                  ? "ring-primary shadow-lg shadow-primary/20"
+                  : "ring-primary/20 dark:ring-primary/30"
               }`}
             >
               <AvatarImage
@@ -203,7 +205,7 @@ const ProfileInfoTab = ({ user }) => {
                 alt={`${user.firstName} ${user.lastName}`}
                 className="object-cover"
               />
-              <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-bold text-2xl">
+              <AvatarFallback className="bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground font-bold text-2xl">
                 {userInitials}
               </AvatarFallback>
             </Avatar>
@@ -222,8 +224,7 @@ const ProfileInfoTab = ({ user }) => {
                 <Button
                   type="button"
                   size="sm"
-                  variant="secondary"
-                  className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-lg"
+                  className="absolute -bottom-2 -right-2 h-9 w-9 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground"
                   onClick={() => {
                     setIsEditingAvatar(true);
                     document.getElementById("avatar-upload")?.click();
@@ -242,21 +243,18 @@ const ProfileInfoTab = ({ user }) => {
                 type="button"
                 size="sm"
                 variant="destructive"
-                className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 shadow-lg"
+                className="absolute -top-2 -right-2 h-7 w-7 rounded-full p-0 shadow-lg"
                 onClick={removePreview}
                 disabled={isLoading}
               >
-                <X className="h-3 w-3" />
+                <X className="h-3.5 w-3.5" />
               </Button>
             )}
 
             {/* New Badge */}
             {imagePreview && (
               <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2">
-                <Badge
-                  variant="secondary"
-                  className="text-xs px-2 py-0.5 bg-brand-orange dark:bg-brand-orange-light text-white shadow-md"
-                >
+                <Badge className="text-xs px-2.5 py-0.5 bg-primary text-primary-foreground shadow-md font-semibold">
                   New
                 </Badge>
               </div>
@@ -264,11 +262,11 @@ const ProfileInfoTab = ({ user }) => {
           </div>
 
           <div className="flex-1">
-            <p className="text-sm font-medium text-foreground mb-1 flex items-center gap-2">
+            <p className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
               Profile Picture
               {!isEditingAvatar && (
                 <Camera
-                  className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-brand-orange transition-colors"
+                  className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-primary transition-colors"
                   onClick={() => {
                     setIsEditingAvatar(true);
                     document.getElementById("avatar-upload")?.click();
@@ -279,7 +277,7 @@ const ProfileInfoTab = ({ user }) => {
             </p>
             <p className="text-xs text-muted-foreground">
               {isEditingAvatar
-                ? "Select a new image (Max 5MB)"
+                ? "Select a new image (Max 5MB, JPG, PNG, or GIF)"
                 : "Hover over avatar or click camera icon to change"}
             </p>
             {imagePreview && (
@@ -289,16 +287,16 @@ const ProfileInfoTab = ({ user }) => {
                   size="sm"
                   onClick={handleSubmitProfilePicture}
                   disabled={isUpdatingPicture}
-                  className="bg-gradient-brand hover:opacity-90 text-xs"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-medium shadow-md"
                 >
                   {isUpdatingPicture ? (
                     <>
-                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                      <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
                       Saving...
                     </>
                   ) : (
                     <>
-                      <Save className="mr-1 h-3 w-3" />
+                      <Save className="mr-1.5 h-3 w-3" />
                       Save Picture
                     </>
                   )}
@@ -309,7 +307,7 @@ const ProfileInfoTab = ({ user }) => {
                   variant="outline"
                   onClick={removePreview}
                   disabled={isUpdatingPicture}
-                  className="text-xs"
+                  className="text-xs font-medium border-2"
                 >
                   Cancel
                 </Button>
@@ -320,11 +318,11 @@ const ProfileInfoTab = ({ user }) => {
 
         {/* Edit Mode Indicator */}
         {isEditing && (
-          <div className="bg-brand-orange/10 dark:bg-brand-orange/20 border-2 border-brand-orange/40 dark:border-brand-orange/50 rounded-lg p-4 animate-in fade-in-50 duration-300">
-            <p className="text-sm font-medium text-brand-orange-dark dark:text-brand-orange-light flex items-center gap-2">
+          <div className="bg-primary/5 dark:bg-primary/10 border-2 border-primary/30 dark:border-primary/40 rounded-lg p-4 animate-in fade-in-50 duration-300 shadow-sm">
+            <p className="text-sm font-semibold text-primary dark:text-primary flex items-center gap-2">
               <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-orange opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-brand-orange"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
               </span>
               Edit Mode Active - Make your changes below
             </p>
@@ -345,7 +343,7 @@ const ProfileInfoTab = ({ user }) => {
                 name="firstName"
                 render={({ field }) => (
                   <FormItem className="space-y-2">
-                    <FormLabel className="text-sm font-medium text-foreground">
+                    <FormLabel className="text-sm font-semibold text-foreground">
                       First Name
                     </FormLabel>
                     <FormControl>
@@ -353,14 +351,14 @@ const ProfileInfoTab = ({ user }) => {
                         {...field}
                         placeholder="Enter your first name"
                         disabled={!isEditing || isLoading}
-                        className={`h-11 font-medium ${
+                        className={`h-11 font-medium transition-all duration-200 ${
                           isEditing
-                            ? "border-edit bg-edit ring-2 ring-edit focus:ring-brand-orange focus:border-brand-orange transition-all duration-200"
-                            : "border-border bg-muted/50"
+                            ? "border-2 border-primary/40 bg-background focus:border-primary focus:ring-2 focus:ring-primary/20"
+                            : "border-2 border-border bg-muted/50 text-foreground"
                         }`}
                       />
                     </FormControl>
-                    <FormMessage className="text-xs" />
+                    <FormMessage className="text-xs font-medium" />
                   </FormItem>
                 )}
               />
@@ -371,7 +369,7 @@ const ProfileInfoTab = ({ user }) => {
                 name="lastName"
                 render={({ field }) => (
                   <FormItem className="space-y-2">
-                    <FormLabel className="text-sm font-medium text-foreground">
+                    <FormLabel className="text-sm font-semibold text-foreground">
                       Last Name
                     </FormLabel>
                     <FormControl>
@@ -379,14 +377,14 @@ const ProfileInfoTab = ({ user }) => {
                         {...field}
                         placeholder="Enter your last name"
                         disabled={!isEditing || isLoading}
-                        className={`h-11 font-medium ${
+                        className={`h-11 font-medium transition-all duration-200 ${
                           isEditing
-                            ? "border-edit bg-edit ring-2 ring-edit focus:ring-brand-orange focus:border-brand-orange transition-all duration-200"
-                            : "border-border bg-muted/50"
+                            ? "border-2 border-primary/40 bg-background focus:border-primary focus:ring-2 focus:ring-primary/20"
+                            : "border-2 border-border bg-muted/50 text-foreground"
                         }`}
                       />
                     </FormControl>
-                    <FormMessage className="text-xs" />
+                    <FormMessage className="text-xs font-medium" />
                   </FormItem>
                 )}
               />
@@ -397,8 +395,8 @@ const ProfileInfoTab = ({ user }) => {
                 name="email"
                 render={({ field }) => (
                   <FormItem className="space-y-2">
-                    <FormLabel className="text-sm font-medium flex items-center gap-2 text-foreground">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
+                    <FormLabel className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                      <Mail className="h-4 w-4 text-primary" />
                       Email Address
                     </FormLabel>
                     <FormControl>
@@ -407,14 +405,14 @@ const ProfileInfoTab = ({ user }) => {
                         type="email"
                         placeholder="Enter your email"
                         disabled={!isEditing || isLoading}
-                        className={`h-11 font-medium ${
+                        className={`h-11 font-medium transition-all duration-200 ${
                           isEditing
-                            ? "border-edit bg-edit ring-2 ring-edit focus:ring-brand-orange focus:border-brand-orange transition-all duration-200"
-                            : "border-border bg-muted/50"
+                            ? "border-2 border-primary/40 bg-background focus:border-primary focus:ring-2 focus:ring-primary/20"
+                            : "border-2 border-border bg-muted/50 text-foreground"
                         }`}
                       />
                     </FormControl>
-                    <FormMessage className="text-xs" />
+                    <FormMessage className="text-xs font-medium" />
                   </FormItem>
                 )}
               />
@@ -425,8 +423,8 @@ const ProfileInfoTab = ({ user }) => {
                 name="phone"
                 render={({ field }) => (
                   <FormItem className="space-y-2">
-                    <FormLabel className="text-sm font-medium flex items-center gap-2 text-foreground">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
+                    <FormLabel className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                      <Phone className="h-4 w-4 text-primary" />
                       Phone Number
                     </FormLabel>
                     <FormControl>
@@ -435,39 +433,44 @@ const ProfileInfoTab = ({ user }) => {
                         value={field.value || ""}
                         placeholder="Enter your phone number"
                         disabled={!isEditing || isLoading}
-                        className={`h-11 font-medium ${
+                        className={`h-11 font-medium transition-all duration-200 ${
                           isEditing
-                            ? "border-edit bg-edit ring-2 ring-edit focus:ring-brand-orange focus:border-brand-orange transition-all duration-200"
-                            : "border-border bg-muted/50"
+                            ? "border-2 border-primary/40 bg-background focus:border-primary focus:ring-2 focus:ring-primary/20"
+                            : "border-2 border-border bg-muted/50 text-foreground"
                         }`}
                       />
                     </FormControl>
-                    <FormMessage className="text-xs" />
+                    <FormMessage className="text-xs font-medium" />
                   </FormItem>
                 )}
               />
 
               {/* Role (Read-only) */}
               <div className="space-y-2">
-                <label className="text-sm font-medium flex items-center gap-2 text-foreground">
-                  <Shield className="h-4 w-4 text-muted-foreground" />
+                <label className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                  <Shield className="h-4 w-4 text-primary" />
                   Role
                 </label>
-                <div className="h-11 px-3 py-2 border border-border bg-muted/50 rounded-md flex items-center font-medium text-foreground">
-                  {user.role || "Not provided"}
+                <div className="h-11 px-3 py-2 border-2 border-border bg-muted/50 rounded-md flex items-center font-medium text-foreground">
+                  <Badge
+                    variant="secondary"
+                    className="bg-primary/10 text-primary font-semibold border border-primary/20"
+                  >
+                    {user.role || "Not provided"}
+                  </Badge>
                 </div>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <Separator className="my-6" />
+            <Separator className="my-6 bg-border" />
             <div className="flex flex-col sm:flex-row gap-3 justify-end pt-2">
               {!isEditing ? (
                 <Button
                   type="button"
                   onClick={() => setIsEditing(true)}
                   size="lg"
-                  className="bg-gradient-brand hover:opacity-90 font-medium"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md hover:shadow-lg transition-all duration-200"
                 >
                   <Edit3 className="mr-2 h-4 w-4" />
                   Edit Profile
@@ -479,7 +482,7 @@ const ProfileInfoTab = ({ user }) => {
                     variant="outline"
                     onClick={handleCancelProfileEdit}
                     size="lg"
-                    className="w-full sm:w-auto border-border/80 hover:bg-accent hover:border-accent-foreground/20 font-medium"
+                    className="w-full sm:w-auto border-2 border-border hover:bg-muted hover:border-foreground/20 font-semibold"
                     disabled={isLoading}
                   >
                     Cancel
@@ -487,7 +490,7 @@ const ProfileInfoTab = ({ user }) => {
                   <Button
                     type="submit"
                     size="lg"
-                    className="w-full sm:w-auto bg-gradient-brand hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-200 font-semibold"
+                    className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200 font-semibold"
                     disabled={isLoading}
                   >
                     {isUpdatingProfile ? (

@@ -119,7 +119,7 @@ const SecurityTab = () => {
         </div>
 
         {!isChangingPassword ? (
-          <div className="flex justify-between items-center p-4 border border-border rounded-lg bg-muted/30 dark:bg-muted/20 shadow-sm">
+          <div className="flex justify-between items-center p-4 border-2 border-border rounded-lg bg-card shadow-sm">
             <div>
               <p className="text-sm font-medium text-foreground">Password</p>
               <p className="text-xs text-muted-foreground">
@@ -129,7 +129,7 @@ const SecurityTab = () => {
             <Button
               onClick={() => setIsChangingPassword(true)}
               size="sm"
-              className="bg-gradient-brand hover:opacity-90 font-medium"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
             >
               Change Password
             </Button>
@@ -141,11 +141,11 @@ const SecurityTab = () => {
               className="space-y-6"
             >
               {/* Edit Mode Indicator */}
-              <div className="bg-brand-orange/10 dark:bg-brand-orange/20 border-2 border-brand-orange/40 dark:border-brand-orange/50 rounded-lg p-4 animate-in fade-in-50 duration-300">
-                <p className="text-sm font-medium text-brand-orange-dark dark:text-brand-orange-light flex items-center gap-2">
+              <div className="bg-primary/10 dark:bg-primary/20 border-2 border-primary/40 dark:border-primary/50 rounded-lg p-4 animate-in fade-in-50 duration-300">
+                <p className="text-sm font-medium text-primary flex items-center gap-2">
                   <span className="relative flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-orange opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-brand-orange"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
                   </span>
                   Password Change Mode Active - Enter your passwords below
                 </p>
@@ -169,7 +169,7 @@ const SecurityTab = () => {
                             type={showCurrentPassword ? "text" : "password"}
                             placeholder="Enter your current password"
                             disabled={isLoading}
-                            className="h-11 pr-10 border-edit bg-edit ring-2 ring-edit focus:ring-brand-orange focus:border-brand-orange transition-all duration-200 font-medium"
+                            className="h-11 pr-10 border-2 border-primary/30 bg-primary/5 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
                           />
                           <button
                             type="button"
@@ -207,7 +207,7 @@ const SecurityTab = () => {
                             type={showNewPassword ? "text" : "password"}
                             placeholder="Enter your new password"
                             disabled={isLoading}
-                            className="h-11 pr-10 border-edit bg-edit ring-2 ring-edit focus:ring-brand-orange focus:border-brand-orange transition-all duration-200 font-medium"
+                            className="h-11 pr-10 border-2 border-primary/30 bg-primary/5 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
                           />
                           <button
                             type="button"
@@ -243,7 +243,7 @@ const SecurityTab = () => {
                             type={showConfirmPassword ? "text" : "password"}
                             placeholder="Confirm your new password"
                             disabled={isLoading}
-                            className="h-11 pr-10 border-edit bg-edit ring-2 ring-edit focus:ring-brand-orange focus:border-brand-orange transition-all duration-200 font-medium"
+                            className="h-11 pr-10 border-2 border-primary/30 bg-primary/5 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
                           />
                           <button
                             type="button"
@@ -274,7 +274,7 @@ const SecurityTab = () => {
                   variant="outline"
                   onClick={handleCancel}
                   size="lg"
-                  className="w-full sm:w-auto border-border/80 hover:bg-accent hover:border-accent-foreground/20 font-medium"
+                  className="w-full sm:w-auto font-medium"
                   disabled={isLoading}
                 >
                   Cancel
@@ -282,7 +282,7 @@ const SecurityTab = () => {
                 <Button
                   type="submit"
                   size="lg"
-                  className="w-full sm:w-auto bg-gradient-brand hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-200 font-semibold"
+                  className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200 font-semibold"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -317,14 +317,14 @@ const SecurityTab = () => {
           </p>
         </div>
 
-        <div className="flex justify-between items-center p-4 border border-border rounded-lg bg-muted/30 dark:bg-muted/20 shadow-sm">
+        <div className="flex justify-between items-center p-4 border-2 border-border rounded-lg bg-card shadow-sm">
           <div>
             <p className="text-sm font-medium text-foreground">Enable 2FA</p>
             <p className="text-xs text-muted-foreground">
               Secure your account with two-factor authentication
             </p>
           </div>
-          <Switch className="data-[state=checked]:bg-brand-orange" />
+          <Switch className="data-[state=checked]:bg-primary" />
         </div>
       </div>
 
