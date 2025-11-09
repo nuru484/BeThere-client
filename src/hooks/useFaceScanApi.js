@@ -21,6 +21,7 @@ export const useAddFaceScan = () => {
     mutationFn: (userData) => addFaceScan(userData),
     onSuccess: (_, userId) => {
       queryClient.invalidateQueries(["facescan", userId]);
+      queryClient.invalidateQueries(["user", userId]);
     },
   });
 };
@@ -30,8 +31,9 @@ export const useDeleteFaceScan = () => {
 
   return useMutation({
     mutationFn: ({ userId }) => deleteFaceScan(userId),
-    onSuccess: () => {
+    onSuccess: (userId) => {
       queryClient.invalidateQueries({ queryKey: ["facescan"] });
+      queryClient.invalidateQueries(["user", userId]);
     },
   });
 };
