@@ -130,7 +130,7 @@ export default function FaceScanner({
 
     return (
       <div
-        className={`text-center font-medium p-4 mt-4 ${bgColor} ${textColor} rounded-lg transition-all duration-300`}
+        className={`text-center font-medium p-4 mt-4 border ${bgColor} ${textColor} rounded-lg transition-all duration-300`}
       >
         <p>{displayStatus}</p>
         {showRefreshButton && (

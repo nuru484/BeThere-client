@@ -81,7 +81,7 @@ const UserAttendancePage = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="container mx-auto space-y-4 sm:space-y-6 py-4 sm:py-6">
+      <div className="container mx-auto space-y-4 sm:space-y-6">
         {/* Header Section */}
         <div className="space-y-3 sm:space-y-0">
           <div className="flex justify-end sm:hidden">

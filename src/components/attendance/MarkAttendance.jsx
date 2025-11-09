@@ -12,6 +12,8 @@ import { useAuth } from "@/hooks/useAuth";
 import PropTypes from "prop-types";
 import toast from "react-hot-toast";
 import ErrorMessage from "../ui/ErrorMessage";
+import { LogIn, LogOut, ArrowLeft, MapPin } from "lucide-react";
+import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
 
 export default function MarkAttendance({ type = "in" }) {
   const { user } = useAuth();
@@ -228,11 +230,10 @@ export default function MarkAttendance({ type = "in" }) {
               }, 2000);
             },
             onError: (error) => {
-              toast.error(
-                error?.message || `Failed to mark attendance ${type}.`
-              );
+              const { message } = extractApiErrorMessage(error);
+              toast.error(message || `Failed to mark attendance ${type}.`);
               setVerificationStatus({
-                message: error?.message || `Failed to mark attendance ${type}.`,
+                message: message || `Failed to mark attendance ${type}.`,
                 type: "error",
               });
               setIsVerifying(false);
@@ -280,39 +281,196 @@ export default function MarkAttendance({ type = "in" }) {
     return null;
   };
 
-  if (fetchingUserFaceData) return <div>Loading face data...</div>;
-
-  if (isFaceApiDataError) {
+  if (fetchingUserFaceData) {
     return (
-      <div className="flex items-center justify-center min-h-96">
-        <ErrorMessage error={faceApiDataError} onRetry={refetchFaceData} />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading face data...</p>
+        </div>
       </div>
     );
   }
 
+  if (isFaceApiDataError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="container max-w-2xl">
+          <ErrorMessage error={faceApiDataError} onRetry={refetchFaceData} />
+        </div>
+      </div>
+    );
+  }
+
+  const isCheckIn = type === "in";
+  const Icon = isCheckIn ? LogIn : LogOut;
+  const gradientColors = isCheckIn
+    ? "from-green-500 to-green-600"
+    : "from-orange-500 to-orange-600";
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center">
-      <div className="container max-w-2xl">
+    <div className="container mx-auto max-w-6xl">
+      <div>
+        {/* Back Button - Mobile Only */}
         <button
           onClick={() => navigate(`/dashboard/events/${eventId}`)}
-          className="mb-4 px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors flex items-center"
+          className="inline-flex lg:hidden items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg border border-input hover:bg-accent"
         >
-          ← Back to Event
+          <ArrowLeft className="h-4 w-4" />
+          <span className="hidden xs:inline">Back to Event</span>
+          <span className="xs:hidden">Back</span>
         </button>
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">
-          Mark Attendance {type === "in" ? "In" : "Out"}
-        </h1>
 
-        <FaceScanner
-          buttonText={`Scan Face to Mark Attendance ${
-            type === "in" ? "In" : "Out"
-          }`}
-          onScanComplete={handleScanComplete}
-          disabled={
-            isVerifying || isMarking || !user?.id || hasSubmittedRef.current
-          }
-          externalStatus={getExternalStatus()}
-        />
+        {/* Header with Back Button (Desktop) */}
+        <div className="flex items-center justify-between pb-6 border-b">
+          <div className="flex items-center gap-3">
+            <div
+              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${gradientColors} flex items-center justify-center shadow-sm`}
+            >
+              <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+                Mark Attendance {isCheckIn ? "In" : "Out"}
+              </h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-0.5">
+                {isCheckIn
+                  ? "Check in to the event with face verification"
+                  : "Check out from the event with face verification"}
+              </p>
+            </div>
+          </div>
+
+          {/* Back Button - Desktop Only */}
+          <button
+            onClick={() => navigate(`/dashboard/events/${eventId}`)}
+            className="hidden lg:inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg border border-input hover:bg-accent"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Event
+          </button>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid lg:grid-cols-3 gap-6 pt-6">
+          {/* Left Column - Side Cards (Hidden on Mobile) */}
+          <div className="hidden lg:flex lg:flex-col gap-6">
+            {/* Location Status Notice */}
+            {latitude && longitude && !locationError && (
+              <div className="bg-green-50 border border-green-200 p-4 rounded-lg h-fit">
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h3 className="text-sm font-semibold text-green-800">
+                      Location Detected
+                    </h3>
+                    <p className="text-sm text-green-700 mt-1">
+                      Your location has been successfully captured and will be
+                      recorded with your attendance.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Important Notice */}
+            <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg h-fit">
+              <div className="flex items-start gap-3">
+                <svg
+                  className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <div>
+                  <h3 className="text-sm font-semibold text-blue-800">
+                    Before You Scan
+                  </h3>
+                  <ul className="text-sm text-blue-700 mt-1 space-y-1">
+                    <li>• Ensure you have a registered face scan</li>
+                    <li>• Allow camera and location permissions</li>
+                    <li>• Position your face clearly in the camera frame</li>
+                    <li>• Ensure good lighting for accurate verification</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Center Column - Face Scanner */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Mobile Cards - Shown only on small screens */}
+            <div className="lg:hidden space-y-4">
+              {/* Location Status Notice */}
+              {latitude && longitude && !locationError && (
+                <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h3 className="text-sm font-semibold text-green-800">
+                        Location Detected
+                      </h3>
+                      <p className="text-sm text-green-700 mt-1">
+                        Your location has been successfully captured and will be
+                        recorded with your attendance.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Important Notice */}
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <svg
+                    className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <div>
+                    <h3 className="text-sm font-semibold text-blue-800">
+                      Before You Scan
+                    </h3>
+                    <ul className="text-sm text-blue-700 mt-1 space-y-1">
+                      <li>• Ensure you have a registered face scan</li>
+                      <li>• Allow camera and location permissions</li>
+                      <li>• Position your face clearly in the camera frame</li>
+                      <li>• Ensure good lighting for accurate verification</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Face Scanner Component - Centered */}
+            <div className="flex justify-center">
+              <FaceScanner
+                buttonText={`Scan Face to Mark ${
+                  isCheckIn ? "Check-In" : "Check-Out"
+                }`}
+                onScanComplete={handleScanComplete}
+                disabled={
+                  isVerifying ||
+                  isMarking ||
+                  !user?.id ||
+                  hasSubmittedRef.current
+                }
+                externalStatus={getExternalStatus()}
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
