@@ -13,7 +13,6 @@ import EventAttendancePage from "@/pages/dashboard/attendance/EventAttendance";
 import UserEventAttendancePage from "@/pages/dashboard/attendance/UserEventAttendance";
 import Userspage from "@/pages/dashboard/users/Users";
 import CreateUserPage from "@/pages/dashboard/users/CreateUser";
-import EditUserPage from "@/pages/dashboard/users/EditUser";
 import DashboardRedirect from "@/pages/dashboard/DashboardRedirect";
 import UserAttendancePage from "@/pages/dashboard/attendance/UserAttendance";
 import EventDetailsPage from "@/pages/dashboard/events/EventDetailsPage";
@@ -71,10 +70,6 @@ const Routes = () => {
             {
               path: "/dashboard/users/create",
               element: <CreateUserPage />,
-            },
-            {
-              path: "/dashboard/users/:userId/edit",
-              element: <EditUserPage />,
             },
             {
               path: "/dashboard/add-facescan",

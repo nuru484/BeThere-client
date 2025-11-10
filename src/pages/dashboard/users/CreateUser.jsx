@@ -11,54 +11,52 @@ export default function CreateUserPage() {
   };
 
   return (
-    <div className="container mx-auto space-y-10">
-      <div className="border-b border-border pb-4 sm:pb-6">
-        {/* Mobile Layout */}
-        <div className="flex flex-col space-y-3 sm:hidden">
+    <div className="container mx-auto max-w-3xl space-y-4 sm:space-y-6">
+      {/* Header Section */}
+      <div className="space-y-3 sm:space-y-0">
+        {/* Back Button - Mobile Only */}
+        <div className="flex justify-end sm:hidden">
           <Button
             variant="outline"
             size="sm"
+            className="border-gray-200 text-gray-700 hover:bg-gray-50 h-8"
             onClick={handleGoBack}
-            className="flex items-center gap-2 self-start"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
             Back
           </Button>
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Create User</h1>
-            <p className="text-sm text-muted-foreground mt-1">Add a new user</p>
-          </div>
         </div>
 
-        {/* Tablet/Desktop Layout */}
-        <div className="hidden sm:flex sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
-              <Plus className="h-5 w-5 text-primary" />
+        {/* Header with Back Button */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-2.5 sm:gap-3 flex-1 min-w-0">
+            <div className="w-9 h-9 sm:w-12 sm:h-12 flex-shrink-0 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-sm">
+              <Plus className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">
+
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 leading-tight break-words">
                 Create User
               </h1>
-              <p className="text-sm text-muted-foreground">
-                Fill in details to add a new user
+              <p className="text-xs sm:text-sm md:text-base text-muted-foreground mt-1 sm:mt-1.5 leading-snug">
+                Fill in details to add a new user to the system
               </p>
             </div>
           </div>
+
+          {/* Back Button - Desktop Only */}
           <Button
             variant="outline"
-            size="sm"
+            className="hidden sm:flex border-gray-200 text-gray-700 hover:bg-gray-50 flex-shrink-0"
             onClick={handleGoBack}
-            className="flex items-center gap-2 shrink-0 ml-4 hover:cursor-pointer"
           >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Back to Users</span>
-            <span className="sm:hidden">Back</span>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Users
           </Button>
         </div>
       </div>
 
-      <UserForm mode="create" />
+      <UserForm />
     </div>
   );
 }

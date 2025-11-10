@@ -25,12 +25,9 @@ export const eventValidationSchema = z
     endDate: z
       .string()
       .optional()
-      .refine(
-        (date) => !date || !isNaN(Date.parse(date)),
-        {
-          message: "End date must be a valid date",
-        }
-      ),
+      .refine((date) => !date || !isNaN(Date.parse(date)), {
+        message: "End date must be a valid date",
+      }),
 
     startTime: z
       .string()
@@ -62,10 +59,7 @@ export const eventValidationSchema = z
       .min(1, "Duration days must be a positive integer")
       .optional(),
 
-    type: z
-      .string()
-      .min(1, "Event type is required")
-      .trim(),
+    type: z.string().min(1, "Event type is required").trim(),
 
     location: z.object({
       name: z
@@ -99,7 +93,6 @@ export const eventValidationSchema = z
   })
   .refine(
     (data) => {
-      // For non-recurring events, endDate is required
       if (!data.isRecurring && !data.endDate) {
         return false;
       }
