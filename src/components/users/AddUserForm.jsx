@@ -1,4 +1,4 @@
-// src/components/users/UserForm.jsx
+// src/components/users/AddUserForm.jsx
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
