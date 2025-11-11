@@ -6,6 +6,7 @@ import {
   useUpdateAttendance,
 } from "@/hooks/useAttendance";
 import FaceScanner from "@/components/FaceScanner";
+import FaceScannerSkeleton from "@/components/FaceScannerSkeleton";
 import { FaceAuthSystem } from "@/lib/FaceAuthSystem";
 import { useGetUserFaceScan } from "@/hooks/useFaceScanApi";
 import { useAuth } from "@/hooks/useAuth";
@@ -282,16 +283,11 @@ export default function MarkAttendance({ type = "in" }) {
     return null;
   };
 
-  if (fetchingUserFaceData) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading face data...</p>
-        </div>
-      </div>
-    );
-  }
+  const isCheckIn = type === "in";
+  const Icon = isCheckIn ? LogIn : LogOut;
+  const gradientColors = isCheckIn
+    ? "from-green-500 to-green-600"
+    : "from-orange-500 to-orange-600";
 
   if (isFaceApiDataError) {
     return (
@@ -302,12 +298,6 @@ export default function MarkAttendance({ type = "in" }) {
       </div>
     );
   }
-
-  const isCheckIn = type === "in";
-  const Icon = isCheckIn ? LogIn : LogOut;
-  const gradientColors = isCheckIn
-    ? "from-green-500 to-green-600"
-    : "from-orange-500 to-orange-600";
 
   return (
     <div className="min-h-screen">
@@ -462,21 +452,25 @@ export default function MarkAttendance({ type = "in" }) {
               </div>
             </div>
 
-            {/* Face Scanner Component - Centered */}
+            {/* Face Scanner Component or Skeleton - Centered */}
             <div className="flex justify-center">
-              <FaceScanner
-                buttonText={`Scan Face to Mark ${
-                  isCheckIn ? "Check-In" : "Check-Out"
-                }`}
-                onScanComplete={handleScanComplete}
-                disabled={
-                  isVerifying ||
-                  isMarking ||
-                  !user?.id ||
-                  hasSubmittedRef.current
-                }
-                externalStatus={getExternalStatus()}
-              />
+              {fetchingUserFaceData ? (
+                <FaceScannerSkeleton />
+              ) : (
+                <FaceScanner
+                  buttonText={`Scan Face to Mark ${
+                    isCheckIn ? "Check-In" : "Check-Out"
+                  }`}
+                  onScanComplete={handleScanComplete}
+                  disabled={
+                    isVerifying ||
+                    isMarking ||
+                    !user?.id ||
+                    hasSubmittedRef.current
+                  }
+                  externalStatus={getExternalStatus()}
+                />
+              )}
             </div>
           </div>
         </div>
