@@ -12,7 +12,7 @@ import EventSignOut from "@/pages/dashboard/attendance/EventSignOut";
 import EventAttendancePage from "@/pages/dashboard/attendance/EventAttendance";
 import UserEventAttendancePage from "@/pages/dashboard/attendance/UserEventAttendance";
 import Userspage from "@/pages/dashboard/users/Users";
-import CreateUserPage from "@/pages/dashboard/users/CreateUser";
+import AddUserPage from "@/pages/dashboard/users/AddUserPage";
 import DashboardRedirect from "@/pages/dashboard/DashboardRedirect";
 import UserAttendancePage from "@/pages/dashboard/attendance/UserAttendance";
 import EventDetailsPage from "@/pages/dashboard/events/EventDetailsPage";
@@ -69,7 +69,7 @@ const Routes = () => {
             },
             {
               path: "/dashboard/users/create",
-              element: <CreateUserPage />,
+              element: <AddUserPage />,
             },
             {
               path: "/dashboard/add-facescan",

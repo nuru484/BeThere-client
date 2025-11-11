@@ -1,10 +1,68 @@
-import UserForm from "@/components/users/UserForm";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus } from "lucide-react";
+import { useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import { ArrowLeft, Plus } from "lucide-react";
+import AddUserForm from "@/components/users/AddUserForm";
+import { Button } from "@/components/ui/button";
+import { useAddUser } from "@/hooks/useUsers";
+import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
+import { addUserSchema } from "@/validation/user/addUserValidation";
 
-export default function CreateUserPage() {
+export default function AddUserPage() {
   const navigate = useNavigate();
+  const { mutateAsync: createUser, isLoading } = useAddUser();
+
+  const defaultValues = useMemo(
+    () => ({
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      role: "USER",
+      password: "",
+    }),
+    []
+  );
+
+  const form = useForm({
+    resolver: zodResolver(addUserSchema),
+    defaultValues,
+  });
+
+  const onSubmit = async (values) => {
+    try {
+      const payload = {
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        role: values.role,
+        password: values.password,
+      };
+      if (values.phone) payload.phone = values.phone;
+
+      const response = await createUser(payload);
+      toast.success(response.message || "User created successfully");
+      navigate(`/dashboard/users/${response.data.id}/profile`);
+    } catch (error) {
+      console.error("User form submission error:", error);
+
+      const { message, fieldErrors, hasFieldErrors } =
+        extractApiErrorMessage(error);
+
+      if (hasFieldErrors && fieldErrors) {
+        Object.entries(fieldErrors).forEach(([field, errorMessage]) => {
+          form.setError(field, {
+            message: errorMessage,
+          });
+        });
+        toast.error(message);
+      } else {
+        toast.error(message);
+      }
+    }
+  };
 
   const handleGoBack = () => {
     navigate("/dashboard/users");
@@ -56,7 +114,7 @@ export default function CreateUserPage() {
         </div>
       </div>
 
-      <UserForm />
+      <AddUserForm form={form} onSubmit={onSubmit} isLoading={isLoading} />
     </div>
   );
 }

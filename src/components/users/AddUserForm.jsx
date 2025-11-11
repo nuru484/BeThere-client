@@ -1,7 +1,5 @@
 // src/components/users/UserForm.jsx
-import { useMemo } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,64 +20,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, User, Mail, Shield } from "lucide-react";
-import toast from "react-hot-toast";
-import { useAddUser } from "@/hooks/useUsers";
-import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
-import { userFormSchema } from "@/validation/user/userFormValidation";
 
-export default function UserForm() {
+export default function AddUserForm({ form, onSubmit, isLoading }) {
   const navigate = useNavigate();
-  const { mutateAsync: createUser, isLoading } = useAddUser();
-
-  const defaultValues = useMemo(
-    () => ({
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      role: "USER",
-      password: "",
-    }),
-    []
-  );
-
-  const form = useForm({
-    resolver: zodResolver(userFormSchema),
-    defaultValues,
-  });
-
-  const onSubmit = async (values) => {
-    try {
-      const payload = {
-        firstName: values.firstName,
-        lastName: values.lastName,
-        email: values.email,
-        role: values.role,
-        password: values.password,
-      };
-      if (values.phone) payload.phone = values.phone;
-
-      const response = await createUser(payload);
-      toast.success(response.message || "User created successfully");
-      navigate(`/dashboard/users/${response.data.id}/user-profile`);
-    } catch (error) {
-      console.error("User form submission error:", error);
-
-      const { message, fieldErrors, hasFieldErrors } =
-        extractApiErrorMessage(error);
-
-      if (hasFieldErrors && fieldErrors) {
-        Object.entries(fieldErrors).forEach(([field, errorMessage]) => {
-          form.setError(field, {
-            message: errorMessage,
-          });
-        });
-        toast.error(message);
-      } else {
-        toast.error(message);
-      }
-    }
-  };
 
   return (
     <div className="w-full max-w-3xl mx-auto">
@@ -299,3 +242,12 @@ export default function UserForm() {
     </div>
   );
 }
+
+AddUserForm.propTypes = {
+  form: PropTypes.shape({
+    control: PropTypes.any.isRequired,
+    handleSubmit: PropTypes.func.isRequired,
+  }).isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  isLoading: PropTypes.bool,
+};

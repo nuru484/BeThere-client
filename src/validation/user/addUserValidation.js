@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // Strong Password Validation Schema
-export const userFormSchema = z.object({
+export const addUserSchema = z.object({
   firstName: z
     .string()
     .min(1, "First name is required")
