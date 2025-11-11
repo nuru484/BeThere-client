@@ -1,5 +1,6 @@
 // src/components/events/EventList.jsx
 import EventListItem from "./EventListItem";
+import EventListItemSkeleton from "./EventListItemSkeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Search } from "lucide-react";
 import ErrorMessage from "@/components/ui/ErrorMessage";
@@ -22,15 +23,39 @@ const EventList = ({
     return (
       <div className="space-y-6">
         {/* Header Skeleton */}
-        <div className="flex items-center justify-between pb-4 border-b">
-          <Skeleton className="h-12 w-48" />
-          <Skeleton className="h-9 w-32" />
+        <div className="max-w-5xl mx-auto flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-4 sm:pb-6 border-b">
+          {/* Title Section Skeleton */}
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-7 sm:h-8 w-32 sm:w-40" />
+              <Skeleton className="h-4 w-24 sm:w-32" />
+            </div>
+          </div>
+
+          {/* Action Buttons Skeleton */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Skeleton className="h-9 w-28" />
+          </div>
         </div>
-        {/* Event List Skeletons */}
+
+        {/* Event List Item Skeletons */}
         <div className="space-y-4">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-32 w-full rounded-lg" />
+            <EventListItemSkeleton key={i} />
           ))}
+        </div>
+
+        {/* Pagination Skeleton */}
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+          <Skeleton className="h-4 w-40" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-9 w-20" />
+            <Skeleton className="h-9 w-9" />
+            <Skeleton className="h-9 w-9" />
+            <Skeleton className="h-9 w-20" />
+          </div>
+          <Skeleton className="h-9 w-32" />
         </div>
       </div>
     );
