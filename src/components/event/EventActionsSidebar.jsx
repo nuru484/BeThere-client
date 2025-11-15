@@ -7,11 +7,60 @@ import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import PropTypes from "prop-types";
 import { useState } from "react";
 
-const EventActionsSidebar = ({ event, user, onDelete, isDeleting }) => {
+const EventActionsSidebar = ({
+  event,
+  user,
+  onDelete,
+  isDeleting,
+  userAttendances = [],
+  isLoadingAttendance,
+  currentSession,
+}) => {
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const isAdmin = user?.role === "ADMIN";
+  const isRecurringEvent = event?.isRecurring;
+
+  // Find attendance for the current session
+  const currentSessionAttendance = currentSession
+    ? userAttendances.find((att) => att.sessionId === currentSession.id)
+    : null;
+
+  // For non-recurring events, find the most recent attendance
+  const latestAttendance =
+    !isRecurringEvent && userAttendances.length > 0
+      ? userAttendances.reduce((latest, current) => {
+          const latestTime = new Date(latest.checkInTime).getTime();
+          const currentTime = new Date(current.checkInTime).getTime();
+          return currentTime > latestTime ? current : latest;
+        }, userAttendances[0])
+      : null;
+
+  // Determine sign-in/sign-out status based on event type
+  let hasSignedIn, hasSignedOut, showSignInButton, showSignOutButton;
+
+  if (isRecurringEvent && currentSession) {
+    // For recurring events: check current session attendance
+    hasSignedIn = currentSessionAttendance?.checkInTime;
+    hasSignedOut = currentSessionAttendance?.checkOutTime;
+
+    showSignInButton = !hasSignedIn;
+    showSignOutButton = hasSignedIn && !hasSignedOut;
+  } else if (!isRecurringEvent) {
+    // For non-recurring events: check latest attendance
+    hasSignedIn = latestAttendance?.checkInTime;
+    hasSignedOut = latestAttendance?.checkOutTime;
+
+    // Only show sign-in if user has never signed in
+    showSignInButton = !hasSignedIn;
+    // Only show sign-out if user has signed in but hasn't signed out yet
+    showSignOutButton = hasSignedIn && !hasSignedOut;
+  } else {
+    // If recurring but no current session, show both buttons
+    showSignInButton = true;
+    showSignOutButton = true;
+  }
 
   const handleDelete = () => {
     onDelete();
@@ -48,23 +97,31 @@ const EventActionsSidebar = ({ event, user, onDelete, isDeleting }) => {
         </CardHeader>
 
         <CardContent className="space-y-3">
-          <Button
-            variant="outline"
-            className="w-full justify-start border-emerald-200 text-emerald-700 hover:bg-emerald-50 text-sm"
-            onClick={handleSignIn}
-          >
-            <LogIn className="w-4 h-4 mr-3" />
-            Sign In to Event
-          </Button>
+          {/* Sign In Button - Conditional */}
+          {showSignInButton && (
+            <Button
+              variant="outline"
+              className="w-full justify-start border-emerald-200 text-emerald-700 hover:bg-emerald-50 text-sm"
+              onClick={handleSignIn}
+              disabled={isLoadingAttendance}
+            >
+              <LogIn className="w-4 h-4 mr-3" />
+              Sign In to Event
+            </Button>
+          )}
 
-          <Button
-            variant="outline"
-            className="w-full justify-start border-teal-200 text-teal-700 hover:bg-teal-50 text-sm"
-            onClick={handleSignOut}
-          >
-            <LogOut className="w-4 h-4 mr-3" />
-            Sign Out of Event
-          </Button>
+          {/* Sign Out Button - Conditional */}
+          {showSignOutButton && (
+            <Button
+              variant="outline"
+              className="w-full justify-start border-teal-200 text-teal-700 hover:bg-teal-50 text-sm"
+              onClick={handleSignOut}
+              disabled={isLoadingAttendance}
+            >
+              <LogOut className="w-4 h-4 mr-3" />
+              Sign Out of Event
+            </Button>
+          )}
 
           {/* View My Attendance (Everyone) */}
           <Button
@@ -132,6 +189,7 @@ const EventActionsSidebar = ({ event, user, onDelete, isDeleting }) => {
 EventActionsSidebar.propTypes = {
   event: PropTypes.shape({
     id: PropTypes.number.isRequired,
+    isRecurring: PropTypes.bool,
   }).isRequired,
   user: PropTypes.shape({
     id: PropTypes.number.isRequired,
@@ -139,6 +197,24 @@ EventActionsSidebar.propTypes = {
   }).isRequired,
   onDelete: PropTypes.func.isRequired,
   isDeleting: PropTypes.bool,
+  userAttendances: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number,
+      checkInTime: PropTypes.string,
+      checkOutTime: PropTypes.string,
+      status: PropTypes.string,
+      sessionId: PropTypes.number,
+    })
+  ),
+  isLoadingAttendance: PropTypes.bool,
+  currentSession: PropTypes.shape({
+    id: PropTypes.number,
+    eventId: PropTypes.number,
+    startDate: PropTypes.string,
+    endDate: PropTypes.string,
+    startTime: PropTypes.string,
+    endTime: PropTypes.string,
+  }),
 };
 
 export default EventActionsSidebar;

@@ -2,6 +2,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useDeleteEvent, useGetEvent } from "@/hooks/useEvent";
+import { useGetUserEventAttendance } from "@/hooks/useAttendance";
 import { ArrowLeft, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,9 @@ import ErrorMessage from "@/components/ui/ErrorMessage";
 import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
 import EventDetails from "@/components/event/EventDetails";
 import EventActionsSidebar from "@/components/event/EventActionsSidebar";
+import { getCurrentSession } from "@/utils/getCurrentSession";
+import { useMemo } from "react";
+import toast from "react-hot-toast";
 
 const EventDetailsPage = () => {
   const navigate = useNavigate();
@@ -24,14 +28,33 @@ const EventDetailsPage = () => {
     refetch,
   } = useGetEvent(eventId);
 
+  const { data: userAttendanceData, isLoading: isLoadingAttendance } =
+    useGetUserEventAttendance(user?.id, eventId, {
+      limit: 100,
+    });
+
   const event = eventData?.data;
+  const userAttendances = userAttendanceData?.data || [];
+
+  // Determine the current session for recurring events
+  const currentSession = useMemo(() => {
+    if (event?.isRecurring) {
+      return getCurrentSession(event);
+    }
+    return null;
+  }, [event]);
 
   const handleDelete = () => {
     deleteEvent(
       { eventId },
       {
-        onSuccess: () => {
+        onSuccess: (response) => {
+          toast.success(response.data.message || "Event deleted successfully");
           navigate("/dashboard/events");
+        },
+        onError: (error) => {
+          const { message } = extractApiErrorMessage(error);
+          toast.error(message || "Failed to deleted event");
         },
       }
     );
@@ -145,6 +168,9 @@ const EventDetailsPage = () => {
                 user={user}
                 onDelete={handleDelete}
                 isDeleting={isDeleting}
+                userAttendances={userAttendances}
+                isLoadingAttendance={isLoadingAttendance}
+                currentSession={currentSession}
               />
             </div>
           </div>
