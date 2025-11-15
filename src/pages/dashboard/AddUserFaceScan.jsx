@@ -5,8 +5,13 @@ import FaceScanner from "@/components/FaceScanner";
 import toast from "react-hot-toast";
 import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
 import { UserCircle } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 export default function AddUserFaceScan() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
   const hasSubmittedRef = useRef(false);
   const {
     mutate: addFaceScan,
@@ -30,6 +35,11 @@ export default function AddUserFaceScan() {
               toast.success(
                 response?.message || "Face registered successfully!"
               );
+
+              if (response.data.user) {
+                login(response.data.user);
+              }
+              navigate(`/dashboard`);
             },
             onError: (err) => {
               console.log(err);
@@ -40,7 +50,7 @@ export default function AddUserFaceScan() {
         );
       }
     },
-    [addFaceScan]
+    [addFaceScan, login, navigate]
   );
 
   const { message } = extractApiErrorMessage(error);
