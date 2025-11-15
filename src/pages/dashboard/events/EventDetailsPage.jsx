@@ -24,7 +24,6 @@ const EventDetailsPage = () => {
     refetch,
   } = useGetEvent(eventId);
 
-  const isAdmin = user?.role === "ADMIN";
   const event = eventData?.data;
 
   const handleDelete = () => {
@@ -143,7 +142,7 @@ const EventDetailsPage = () => {
             <div className="lg:sticky lg:top-24">
               <EventActionsSidebar
                 event={event}
-                isAdmin={isAdmin}
+                user={user}
                 onDelete={handleDelete}
                 isDeleting={isDeleting}
               />

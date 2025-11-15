@@ -1,6 +1,5 @@
-// src/components/event/EventActionsSidebar.jsx
 import { useNavigate } from "react-router-dom";
-import { Pencil, Trash, Users, LogIn, LogOut } from "lucide-react";
+import { Pencil, Trash, Users, LogIn, LogOut, UserCheck } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -8,9 +7,11 @@ import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import PropTypes from "prop-types";
 import { useState } from "react";
 
-const EventActionsSidebar = ({ event, isAdmin, onDelete, isDeleting }) => {
+const EventActionsSidebar = ({ event, user, onDelete, isDeleting }) => {
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const isAdmin = user?.role === "ADMIN";
 
   const handleDelete = () => {
     onDelete();
@@ -29,6 +30,10 @@ const EventActionsSidebar = ({ event, isAdmin, onDelete, isDeleting }) => {
     navigate(`/dashboard/events/${event.id}/attendance`);
   };
 
+  const handleViewMyAttendance = () => {
+    navigate(`/dashboard/attendance/user/${user.id}/event/${event.id}`);
+  };
+
   const handleEditEvent = () => {
     navigate(`/dashboard/events/${event.id}/edit`);
   };
@@ -41,6 +46,7 @@ const EventActionsSidebar = ({ event, isAdmin, onDelete, isDeleting }) => {
             Quick Actions
           </h3>
         </CardHeader>
+
         <CardContent className="space-y-3">
           <Button
             variant="outline"
@@ -60,6 +66,16 @@ const EventActionsSidebar = ({ event, isAdmin, onDelete, isDeleting }) => {
             Sign Out of Event
           </Button>
 
+          {/* View My Attendance (Everyone) */}
+          <Button
+            variant="outline"
+            className="w-full justify-start border-purple-200 text-purple-700 hover:bg-purple-50 text-sm"
+            onClick={handleViewMyAttendance}
+          >
+            <UserCheck className="w-4 h-4 mr-3" />
+            My Event Attendance
+          </Button>
+
           {/* Admin Actions */}
           {isAdmin && (
             <>
@@ -69,7 +85,7 @@ const EventActionsSidebar = ({ event, isAdmin, onDelete, isDeleting }) => {
                 onClick={handleViewAttendance}
               >
                 <Users className="w-4 h-4 mr-3" />
-                View Attendance Report
+                Event Attendance
               </Button>
 
               <Separator className="my-4" />
@@ -117,7 +133,10 @@ EventActionsSidebar.propTypes = {
   event: PropTypes.shape({
     id: PropTypes.number.isRequired,
   }).isRequired,
-  isAdmin: PropTypes.bool.isRequired,
+  user: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    role: PropTypes.string.isRequired,
+  }).isRequired,
   onDelete: PropTypes.func.isRequired,
   isDeleting: PropTypes.bool,
 };
