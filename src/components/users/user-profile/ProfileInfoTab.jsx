@@ -34,6 +34,7 @@ import {
 import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
 import PropTypes from "prop-types";
 import { profileFormSchema } from "@/validation/user/profileValidation";
+import { useAuth } from "@/hooks/useAuth";
 
 const ProfileInfoTab = ({ user }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -41,8 +42,12 @@ const ProfileInfoTab = ({ user }) => {
   const [selectedAvatarFile, setSelectedAvatarFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
+  const { user: currentUser, login: logUserIn } = useAuth();
+  const isViewingOwnProfile = currentUser?.id === user?.id;
+
   const { mutateAsync: updateProfile, isLoading: isUpdatingProfile } =
     useUpdateUserProfile();
+
   const { mutateAsync: updateProfilePicture, isLoading: isUpdatingPicture } =
     useUpdateUserProfilePicture();
 
@@ -115,6 +120,10 @@ const ProfileInfoTab = ({ user }) => {
 
       toast.dismiss(toastId);
       toast.success(response.message || "Profile updated successfully!");
+
+      if (isViewingOwnProfile && response.data) {
+        logUserIn(response.data);
+      }
 
       setIsEditing(false);
     } catch (err) {
