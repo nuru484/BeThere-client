@@ -1,5 +1,5 @@
 // src/components/user-profile/ProfileInfoTab.jsx
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
@@ -25,8 +25,15 @@ import {
   Edit3,
   Camera,
   X,
+  ZoomIn,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   useUpdateUserProfile,
   useUpdateUserProfilePicture,
@@ -42,6 +49,10 @@ const ProfileInfoTab = ({ user }) => {
   const [isEditingAvatar, setIsEditingAvatar] = useState(false);
   const [selectedAvatarFile, setSelectedAvatarFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [isConvertingHeic, setIsConvertingHeic] = useState(false);
+  const [isPreparingPreview, setIsPreparingPreview] = useState(false);
+  const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
+  const fileInputRef = useRef(null);
   const { user: currentUser, login: logUserIn } = useAuth();
   const isViewingOwnProfile = currentUser?.id === user?.id;
   const { mutateAsync: updateProfile, isLoading: isUpdatingProfile } =
@@ -68,6 +79,14 @@ const ProfileInfoTab = ({ user }) => {
     if (!file) return;
 
     setIsEditingAvatar(true);
+    setIsPreparingPreview(true);
+    setIsConvertingHeic(false);
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size should be less than 5MB");
+      setIsPreparingPreview(false);
+      return;
+    }
 
     const isHeic =
       file.name.toLowerCase().endsWith(".heic") ||
@@ -78,21 +97,23 @@ const ProfileInfoTab = ({ user }) => {
     let previewBlob = file;
 
     if (isHeic) {
+      setIsConvertingHeic(true);
       try {
         previewBlob = await heic2any({
           blob: file,
           toType: "image/jpeg",
+          quality: 0.8,
         });
+        if (Array.isArray(previewBlob)) previewBlob = previewBlob[0];
       } catch (err) {
-        console.log(err);
-        toast.error("Failed to preview HEIC file");
+        console.error("HEIC conversion failed:", err);
+        toast.error("Failed to process HEIC file");
+        setIsPreparingPreview(false);
+        setIsConvertingHeic(false);
         return;
+      } finally {
+        setIsConvertingHeic(false);
       }
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image size should be less than 5MB");
-      return;
     }
 
     if (imagePreview) {
@@ -102,6 +123,7 @@ const ProfileInfoTab = ({ user }) => {
     const previewUrl = URL.createObjectURL(previewBlob);
     setImagePreview(previewUrl);
     setSelectedAvatarFile(file);
+    setIsPreparingPreview(false);
   };
 
   const removePreview = () => {
@@ -111,6 +133,9 @@ const ProfileInfoTab = ({ user }) => {
     setImagePreview(null);
     setSelectedAvatarFile(null);
     setIsEditingAvatar(false);
+    setIsPreparingPreview(false);
+    setIsConvertingHeic(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleCancelProfileEdit = () => {
@@ -167,8 +192,10 @@ const ProfileInfoTab = ({ user }) => {
       return;
     }
 
-    // Defensive re-validation in case mobile browser provides incorrect type
-    if (!selectedAvatarFile.type.startsWith("image/")) {
+    if (
+      !selectedAvatarFile.type.startsWith("image/") &&
+      !selectedAvatarFile.name.endsWith(".heic")
+    ) {
       toast.error("Invalid image file selected");
       return;
     }
@@ -197,7 +224,10 @@ const ProfileInfoTab = ({ user }) => {
     }
   };
 
-  const isLoading = isUpdatingProfile || isUpdatingPicture;
+  const isLoading =
+    isUpdatingProfile || isUpdatingPicture || isPreparingPreview;
+
+  const currentImageSrc = imagePreview || user.profilePicture;
 
   return (
     <div className="space-y-6">
@@ -216,35 +246,57 @@ const ProfileInfoTab = ({ user }) => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-5 border-2 border-border rounded-lg bg-card shadow-sm">
           <div className="relative group">
             <input
+              ref={fileInputRef}
               type="file"
+              accept="image/*,.heic,.heif"
               onChange={handleFileChange}
               className="hidden"
               id="avatar-upload"
               disabled={isLoading}
             />
-            <Avatar
-              className={`h-24 w-24 ring-4 transition-all duration-200 ${
-                isEditingAvatar
-                  ? "ring-primary shadow-lg shadow-primary/20"
-                  : "ring-primary/20 dark:ring-primary/30"
-              }`}
+            <div
+              className="relative cursor-pointer"
+              onClick={() => currentImageSrc && setIsFullscreenOpen(true)}
             >
-              <AvatarImage
-                src={(imagePreview || user.profilePicture) ?? undefined}
-                alt={`${user.firstName} ${user.lastName}`}
-                className="object-cover"
-              />
-              <AvatarFallback className="bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground font-bold text-2xl">
-                {userInitials}
-              </AvatarFallback>
-            </Avatar>
+              <Avatar
+                className={`h-24 w-24 ring-4 transition-all duration-200 ${
+                  isEditingAvatar
+                    ? "ring-primary shadow-lg shadow-primary/20"
+                    : "ring-primary/20 dark:ring-primary/30"
+                } ${currentImageSrc ? "hover:ring-primary/50" : ""}`}
+              >
+                <AvatarImage
+                  src={currentImageSrc ?? undefined}
+                  alt={`${user.firstName} ${user.lastName}`}
+                  className="object-cover"
+                />
+                <AvatarFallback className="bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground font-bold text-2xl">
+                  {userInitials}
+                </AvatarFallback>
+              </Avatar>
 
-            {!isEditingAvatar && (
+              {/* Loading Overlay for Preview/Conversion */}
+              {(isPreparingPreview || isConvertingHeic) && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
+                  <Loader2 className="h-6 w-6 animate-spin text-white" />
+                </div>
+              )}
+
+              {/* Zoom Indicator */}
+              {currentImageSrc && !isPreparingPreview && (
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/30 rounded-full">
+                  <ZoomIn className="h-6 w-6 text-white" />
+                </div>
+              )}
+            </div>
+
+            {!isEditingAvatar && !isPreparingPreview && (
               <Button
                 type="button"
                 size="sm"
                 className="absolute -bottom-2 -right-2 h-9 w-9 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   document.getElementById("avatar-upload")?.click();
                 }}
                 disabled={isLoading}
@@ -261,7 +313,10 @@ const ProfileInfoTab = ({ user }) => {
                 size="sm"
                 variant="destructive"
                 className="absolute -top-2 -right-2 h-7 w-7 rounded-full p-0 shadow-lg"
-                onClick={removePreview}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removePreview();
+                }}
                 disabled={isLoading}
               >
                 <X className="h-3.5 w-3.5" />
@@ -269,7 +324,7 @@ const ProfileInfoTab = ({ user }) => {
             )}
 
             {/* New Badge */}
-            {imagePreview && (
+            {imagePreview && !isPreparingPreview && (
               <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2">
                 <Badge className="text-xs px-2.5 py-0.5 bg-primary text-primary-foreground shadow-md font-semibold">
                   New
@@ -281,7 +336,7 @@ const ProfileInfoTab = ({ user }) => {
           <div className="flex-1">
             <p className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
               Profile Picture
-              {!isEditingAvatar && (
+              {!isEditingAvatar && !isPreparingPreview && (
                 <Camera
                   className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-primary transition-colors"
                   onClick={() => {
@@ -293,10 +348,14 @@ const ProfileInfoTab = ({ user }) => {
             </p>
             <p className="text-xs text-muted-foreground">
               {isEditingAvatar
-                ? "Select a new image (Max 5MB, JPG, PNG, or GIF)"
-                : "Hover over avatar or click camera icon to change"}
+                ? isConvertingHeic
+                  ? "Converting HEIC image..."
+                  : isPreparingPreview
+                  ? "Preparing preview..."
+                  : "Select a new image (Max 5MB, JPG, PNG, HEIC, or GIF)"
+                : "Click avatar to view full size • Hover or click camera to change"}
             </p>
-            {imagePreview && (
+            {imagePreview && !isPreparingPreview && (
               <div className="mt-3 flex gap-2">
                 <Button
                   type="button"
@@ -527,6 +586,30 @@ const ProfileInfoTab = ({ user }) => {
           </form>
         </Form>
       </div>
+
+      {/* Fullscreen Image Dialog */}
+      <Dialog open={isFullscreenOpen} onOpenChange={setIsFullscreenOpen}>
+        <DialogContent className="max-w-3xl p-0 overflow-hidden bg-transparent border-0">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Profile Picture</DialogTitle>
+          </DialogHeader>
+          <div className="relative">
+            <img
+              src={currentImageSrc}
+              alt={`${user.firstName} ${user.lastName}`}
+              className="w-full h-auto max-h-screen object-contain"
+            />
+            <Button
+              variant="secondary"
+              size="icon"
+              className="absolute top-4 right-4 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background"
+              onClick={() => setIsFullscreenOpen(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
