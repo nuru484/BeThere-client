@@ -3,7 +3,7 @@ import { useLogin } from "@/hooks/useAuth";
 import LoginForm from "@/components/LoginForm";
 import encryptStorage from "@/lib/encryptedStorage";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle, UserCheck, Home } from "lucide-react";
+import { CheckCircle, UserCheck } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -72,30 +72,18 @@ const LoginPage = () => {
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
 
         <div className="relative z-10">
-          {/* Logo and Home Button */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                <img
-                  src={"/assets/logo.png"}
-                  alt="BeThere Logo"
-                  className="h-10 w-10 object-contain transition-transform duration-200 group-hover:scale-105"
-                />
-              </div>
-              <span className="text-3xl font-bold text-white tracking-tight">
-                BeThere
-              </span>
+          {/* Logo */}
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+              <img
+                src={"/assets/logo.png"}
+                alt="BeThere Logo"
+                className="h-10 w-10 object-contain transition-transform duration-200 group-hover:scale-105"
+              />
             </div>
-
-            {/* Home Button */}
-            <button
-              onClick={() => navigate("/")}
-              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg transition-all duration-200 group"
-              aria-label="Go to home page"
-            >
-              <Home className="text-white" size={20} />
-              <span className="text-white font-medium">Home</span>
-            </button>
+            <span className="text-3xl font-bold text-white tracking-tight">
+              BeThere
+            </span>
           </div>
 
           <div className="mt-16">
