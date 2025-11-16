@@ -41,13 +41,10 @@ const ProfileInfoTab = ({ user }) => {
   const [isEditingAvatar, setIsEditingAvatar] = useState(false);
   const [selectedAvatarFile, setSelectedAvatarFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-
   const { user: currentUser, login: logUserIn } = useAuth();
   const isViewingOwnProfile = currentUser?.id === user?.id;
-
   const { mutateAsync: updateProfile, isLoading: isUpdatingProfile } =
     useUpdateUserProfile();
-
   const { mutateAsync: updateProfilePicture, isLoading: isUpdatingPicture } =
     useUpdateUserProfilePicture();
 
@@ -67,62 +64,37 @@ const ProfileInfoTab = ({ user }) => {
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
-
     if (!file) return;
 
-    // More comprehensive file type checking for mobile compatibility
-    const validTypes = [
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-    ];
-    const fileType = file.type.toLowerCase();
+    // Activate editing mode only after a file is selected
+    setIsEditingAvatar(true);
 
-    if (!validTypes.includes(fileType)) {
-      toast.error("Please select a valid image file (JPG, PNG, GIF, or WebP)");
-      e.target.value = "";
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file");
       return;
     }
-
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image size should be less than 5MB");
-      e.target.value = "";
       return;
     }
 
-    // Set the file first to ensure it's available even if preview fails
+    // Revoke previous object URL to prevent memory leaks
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
     setSelectedAvatarFile(file);
-
-    const reader = new FileReader();
-
-    // Use onloadend for better mobile compatibility
-    reader.onloadend = () => {
-      if (reader.result) {
-        setImagePreview(reader.result);
-      }
-    };
-
-    reader.onerror = () => {
-      toast.error("Failed to read image file. Please try again.");
-      setSelectedAvatarFile(null);
-      setImagePreview(null);
-      e.target.value = "";
-    };
-
-    reader.readAsDataURL(file);
   };
 
   const removePreview = () => {
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
     setImagePreview(null);
     setSelectedAvatarFile(null);
     setIsEditingAvatar(false);
-    // Reset the file input
-    const fileInput = document.getElementById("avatar-upload");
-    if (fileInput) {
-      fileInput.value = "";
-    }
   };
 
   const handleCancelProfileEdit = () => {
@@ -137,7 +109,6 @@ const ProfileInfoTab = ({ user }) => {
 
   const handleSubmitProfile = async (data) => {
     const toastId = toast.loading("Updating profile...");
-
     try {
       const response = await updateProfile({
         userId: user.id,
@@ -148,22 +119,17 @@ const ProfileInfoTab = ({ user }) => {
           phone: data.phone || null,
         },
       });
-
       toast.dismiss(toastId);
       toast.success(response.message || "Profile updated successfully!");
-
       if (isViewingOwnProfile && response.data) {
         logUserIn(response.data);
       }
-
       setIsEditing(false);
     } catch (err) {
       console.error("Profile update error:", err);
       toast.dismiss(toastId);
-
       const { message, fieldErrors, hasFieldErrors } =
         extractApiErrorMessage(err);
-
       if (hasFieldErrors && fieldErrors) {
         Object.entries(fieldErrors).forEach(([field, errorMessage]) => {
           if (field in form.getValues()) {
@@ -185,39 +151,31 @@ const ProfileInfoTab = ({ user }) => {
       return;
     }
 
-    const toastId = toast.loading("Updating profile picture...");
+    // Defensive re-validation in case mobile browser provides incorrect type
+    if (!selectedAvatarFile.type.startsWith("image/")) {
+      toast.error("Invalid image file selected");
+      return;
+    }
 
+    const toastId = toast.loading("Updating profile picture...");
     try {
       const formData = new FormData();
       formData.append("profilePicture", selectedAvatarFile);
-
       const response = await updateProfilePicture({
         userId: user.id,
         formData,
       });
-
       toast.dismiss(toastId);
       toast.success(
         response.message || "Profile picture updated successfully!"
       );
-
       if (isViewingOwnProfile && response.data) {
         logUserIn(response.data);
       }
-
-      setSelectedAvatarFile(null);
-      setImagePreview(null);
-      setIsEditingAvatar(false);
-
-      // Reset the file input
-      const fileInput = document.getElementById("avatar-upload");
-      if (fileInput) {
-        fileInput.value = "";
-      }
+      removePreview();
     } catch (err) {
       console.error("Profile picture update error:", err);
       toast.dismiss(toastId);
-
       const { message } = extractApiErrorMessage(err);
       toast.error(message);
     }
@@ -240,70 +198,64 @@ const ProfileInfoTab = ({ user }) => {
 
       {/* Profile Content */}
       <div className="space-y-6">
+        {/* Avatar Section */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-5 border-2 border-border rounded-lg bg-card shadow-sm">
           <div className="relative group">
+            {/* File input - always mounted, with capture for mobile camera */}
             <input
-              id="avatar-upload"
-              name="profilePicture"
               type="file"
               accept="image/*"
-              capture="user"
+              capture="environment"
               onChange={handleFileChange}
-              className="sr-only"
+              className="hidden"
+              id="avatar-upload"
               disabled={isLoading}
             />
-
-            {/* Make the Avatar clickable by wrapping it in a label */}
-            <label
-              htmlFor="avatar-upload"
-              className="cursor-pointer inline-block"
+            <Avatar
+              className={`h-24 w-24 ring-4 transition-all duration-200 ${
+                isEditingAvatar
+                  ? "ring-primary shadow-lg shadow-primary/20"
+                  : "ring-primary/20 dark:ring-primary/30"
+              }`}
             >
-              <Avatar
-                className={`h-24 w-24 ring-4 transition-all duration-200 ${
-                  isEditingAvatar
-                    ? "ring-primary shadow-lg shadow-primary/20"
-                    : "ring-primary/20 dark:ring-primary/30"
-                }`}
-              >
-                <AvatarImage
-                  src={(imagePreview || user.profilePicture) ?? undefined}
-                  alt={`${user.firstName} ${user.lastName}`}
-                  className="object-cover"
-                />
-                <AvatarFallback className="bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground font-bold text-2xl">
-                  {userInitials}
-                </AvatarFallback>
-              </Avatar>
-            </label>
+              <AvatarImage
+                src={(imagePreview || user.profilePicture) ?? undefined}
+                alt={`${user.firstName} ${user.lastName}`}
+                className="object-cover"
+              />
+              <AvatarFallback className="bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground font-bold text-2xl">
+                {userInitials}
+              </AvatarFallback>
+            </Avatar>
 
-            {/* Edit Avatar Button — also uses label so tapping it opens the picker on mobile */}
+            {/* Edit Avatar Button - triggers file input directly in user gesture */}
             {!isEditingAvatar && (
-              <label htmlFor="avatar-upload" title="Change profile picture">
-                <button
-                  type="button"
-                  size="sm"
-                  className="absolute -bottom-2 -right-2 h-9 w-9 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center"
-                  onClick={() => setIsEditingAvatar(true)}
-                  disabled={isLoading}
-                >
-                  <Camera className="h-4 w-4" />
-                </button>
-              </label>
+              <Button
+                type="button"
+                size="sm"
+                className="absolute -bottom-2 -right-2 h-9 w-9 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground"
+                onClick={() => {
+                  document.getElementById("avatar-upload")?.click();
+                }}
+                disabled={isLoading}
+                title="Change profile picture"
+              >
+                <Camera className="h-4 w-4" />
+              </Button>
             )}
 
             {/* Remove Preview Button */}
             {imagePreview && (
-              <button
+              <Button
                 type="button"
                 size="sm"
                 variant="destructive"
-                className="absolute -top-2 -right-2 h-7 w-7 rounded-full p-0 shadow-lg bg-destructive text-destructive-foreground flex items-center justify-center"
+                className="absolute -top-2 -right-2 h-7 w-7 rounded-full p-0 shadow-lg"
                 onClick={removePreview}
                 disabled={isLoading}
-                aria-label="Remove selected image"
               >
                 <X className="h-3.5 w-3.5" />
-              </button>
+              </Button>
             )}
 
             {/* New Badge */}
@@ -320,26 +272,20 @@ const ProfileInfoTab = ({ user }) => {
             <p className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
               Profile Picture
               {!isEditingAvatar && (
-                <span
-                  className="ml-1 text-muted-foreground cursor-pointer hover:text-primary transition-colors"
+                <Camera
+                  className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-primary transition-colors"
                   onClick={() => {
-                    /* We still flip UI state to editing when user taps the camera icon */
-                    setIsEditingAvatar(true);
-                    /* no programmatic .click() — label handles the picker */
+                    document.getElementById("avatar-upload")?.click();
                   }}
-                  role="button"
-                  aria-hidden="true"
-                >
-                  <Camera className="h-4 w-4" />
-                </span>
+                  title="Click to change"
+                />
               )}
             </p>
             <p className="text-xs text-muted-foreground">
               {isEditingAvatar
                 ? "Select a new image (Max 5MB, JPG, PNG, or GIF)"
-                : "Tap the avatar or camera icon to change"}
+                : "Hover over avatar or click camera icon to change"}
             </p>
-
             {imagePreview && (
               <div className="mt-3 flex gap-2">
                 <Button
@@ -375,6 +321,8 @@ const ProfileInfoTab = ({ user }) => {
             )}
           </div>
         </div>
+
+        {/* Edit Mode Indicator */}
         {isEditing && (
           <div className="bg-primary/5 dark:bg-primary/10 border-2 border-primary/30 dark:border-primary/40 rounded-lg p-4 animate-in fade-in-50 duration-300 shadow-sm">
             <p className="text-sm font-semibold text-primary dark:text-primary flex items-center gap-2">
@@ -386,6 +334,7 @@ const ProfileInfoTab = ({ user }) => {
             </p>
           </div>
         )}
+
         {/* Profile Form */}
         <Form {...form}>
           <form
