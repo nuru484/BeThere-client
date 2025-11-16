@@ -34,6 +34,7 @@
     "encrypt-storage": "^2.14.6",
     "face-api.js": "^0.22.2",
     "framer-motion": "^12.23.24",
+    "heic2any": "^0.0.4",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.471.0",
     "react": "^18.3.1",

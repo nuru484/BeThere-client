@@ -35,6 +35,7 @@ import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
 import PropTypes from "prop-types";
 import { profileFormSchema } from "@/validation/user/profileValidation";
 import { useAuth } from "@/hooks/useAuth";
+import heic2any from "heic2any";
 
 const ProfileInfoTab = ({ user }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -62,28 +63,43 @@ const ProfileInfoTab = ({ user }) => {
     user.lastName?.charAt(0) || ""
   }`.toUpperCase();
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Activate editing mode only after a file is selected
     setIsEditingAvatar(true);
 
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select a valid image file");
-      return;
+    const isHeic =
+      file.name.toLowerCase().endsWith(".heic") ||
+      file.type === "image/heic" ||
+      file.type === "image/heif" ||
+      file.type === "";
+
+    let previewBlob = file;
+
+    if (isHeic) {
+      try {
+        previewBlob = await heic2any({
+          blob: file,
+          toType: "image/jpeg",
+        });
+      } catch (err) {
+        console.log(err);
+        toast.error("Failed to preview HEIC file");
+        return;
+      }
     }
+
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image size should be less than 5MB");
       return;
     }
 
-    // Revoke previous object URL to prevent memory leaks
     if (imagePreview) {
       URL.revokeObjectURL(imagePreview);
     }
 
-    const previewUrl = URL.createObjectURL(file);
+    const previewUrl = URL.createObjectURL(previewBlob);
     setImagePreview(previewUrl);
     setSelectedAvatarFile(file);
   };
