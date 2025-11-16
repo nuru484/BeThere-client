@@ -196,15 +196,11 @@ const ProfileInfoTab = ({ user }) => {
         </p>
       </div>
 
-      {/* Profile Content */}
       <div className="space-y-6">
-        {/* Avatar Section */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-5 border-2 border-border rounded-lg bg-card shadow-sm">
           <div className="relative group">
-            {/* File input - always mounted, with capture for mobile camera */}
             <input
               type="file"
-              accept="image/*"
               onChange={handleFileChange}
               className="hidden"
               id="avatar-upload"
@@ -227,7 +223,6 @@ const ProfileInfoTab = ({ user }) => {
               </AvatarFallback>
             </Avatar>
 
-            {/* Edit Avatar Button - triggers file input directly in user gesture */}
             {!isEditingAvatar && (
               <Button
                 type="button"
