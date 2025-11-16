@@ -92,7 +92,7 @@ const Routes = () => {
   const publicRoutes = [
     {
       path: "/",
-      element: <LoginPage />,
+      element: <div>HomePage</div>,
       errorElement: <ErrorPage />,
     },
 

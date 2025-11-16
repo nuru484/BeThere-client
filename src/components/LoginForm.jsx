@@ -20,10 +20,13 @@ import {
   Shield,
   UserCog,
   Users,
+  Home,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const LoginForm = ({ form, onSubmit, isLoading }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -50,18 +53,30 @@ const LoginForm = ({ form, onSubmit, isLoading }) => {
 
   return (
     <div className="w-full max-w-md">
-      {/* Mobile Logo */}
-      <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
-        <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-lg flex items-center justify-center shadow-lg">
-          <img
-            src={"/assets/logo.png"}
-            alt="BeThere Logo"
-            className="h-10 w-10 object-contain transition-transform duration-200 group-hover:scale-105"
-          />
+      {/* Mobile Logo and Home Button */}
+      <div className="lg:hidden flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-lg flex items-center justify-center shadow-lg">
+            <img
+              src={"/assets/logo.png"}
+              alt="BeThere Logo"
+              className="h-10 w-10 object-contain transition-transform duration-200 group-hover:scale-105"
+            />
+          </div>
+          <span className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent">
+            BeThere
+          </span>
         </div>
-        <span className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent">
-          BeThere
-        </span>
+
+        {/* Home Button */}
+        <button
+          onClick={() => navigate("/")}
+          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-all duration-200"
+          aria-label="Go to home page"
+        >
+          <Home className="text-white" size={18} />
+          <span className="text-white font-medium text-sm">Home</span>
+        </button>
       </div>
 
       <Form {...form}>
@@ -150,7 +165,6 @@ const LoginForm = ({ form, onSubmit, isLoading }) => {
               Remember me
             </label>
 
-            {/* FIXED: missing <a> tag */}
             <a
               href="#"
               className="text-sm text-emerald-600 hover:text-emerald-700 font-medium hover:underline transition duration-200"
@@ -231,7 +245,7 @@ const LoginForm = ({ form, onSubmit, isLoading }) => {
       {/* Footer */}
       <div className="mt-8 text-center">
         <p className="text-sm text-gray-500">
-          Need help? {/* FIXED: missing <a> tag */}
+          Need help?{" "}
           <a
             href="#"
             className="text-emerald-600 hover:text-emerald-700 font-medium hover:underline"

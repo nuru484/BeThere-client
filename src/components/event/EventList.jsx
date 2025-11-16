@@ -42,7 +42,7 @@ const EventList = ({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchInput]);
+  }, [searchInput, filters?.search, onFiltersChange]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -52,7 +52,7 @@ const EventList = ({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [locationInput]);
+  }, [locationInput, filters?.location, onFiltersChange]);
 
   const handleClearFilters = () => {
     setSearchInput("");
