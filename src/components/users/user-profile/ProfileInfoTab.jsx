@@ -202,6 +202,16 @@ const ProfileInfoTab = ({ user }) => {
         {/* Avatar Section */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-5 border-2 border-border rounded-lg bg-card shadow-sm">
           <div className="relative group">
+            {/* FIXED: Moved input outside conditional rendering */}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+              id="avatar-upload"
+              disabled={isLoading}
+            />
+
             <Avatar
               className={`h-24 w-24 ring-4 transition-all duration-200 ${
                 isEditingAvatar
@@ -221,29 +231,19 @@ const ProfileInfoTab = ({ user }) => {
 
             {/* Edit Avatar Button */}
             {!isEditingAvatar && (
-              <>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  id="avatar-upload"
-                  disabled={isLoading}
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  className="absolute -bottom-2 -right-2 h-9 w-9 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground"
-                  onClick={() => {
-                    setIsEditingAvatar(true);
-                    document.getElementById("avatar-upload")?.click();
-                  }}
-                  disabled={isLoading}
-                  title="Change profile picture"
-                >
-                  <Camera className="h-4 w-4" />
-                </Button>
-              </>
+              <Button
+                type="button"
+                size="sm"
+                className="absolute -bottom-2 -right-2 h-9 w-9 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground"
+                onClick={() => {
+                  setIsEditingAvatar(true);
+                  document.getElementById("avatar-upload")?.click();
+                }}
+                disabled={isLoading}
+                title="Change profile picture"
+              >
+                <Camera className="h-4 w-4" />
+              </Button>
             )}
 
             {/* Remove Preview Button */}
