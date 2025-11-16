@@ -1,5 +1,5 @@
 // src/pages/EventsPage.jsx
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
@@ -18,6 +18,11 @@ export default function EventsPage() {
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const [filters, setFilters] = useState({
+    search: undefined,
+    type: undefined,
+    location: undefined,
+  });
 
   const {
     data: eventsData,
@@ -25,7 +30,13 @@ export default function EventsPage() {
     isError,
     error,
     refetch,
-  } = useGetEvents({ page, limit });
+  } = useGetEvents({
+    page,
+    limit,
+    ...Object.fromEntries(
+      Object.entries(filters).filter(([, value]) => value !== undefined)
+    ),
+  });
 
   const { mutate: deleteAllEvents, isLoading: isDeletingAll } =
     useDeleteAllEvents();
@@ -36,6 +47,14 @@ export default function EventsPage() {
     setLimit(newLimit);
     setPage(1);
   };
+
+  const handleFiltersChange = useCallback((newFilters) => {
+    setFilters((prev) => ({
+      ...prev,
+      ...newFilters,
+    }));
+    setPage(1);
+  }, []);
 
   const handleCreateEvent = () => {
     navigate("/dashboard/events/create");
@@ -67,7 +86,7 @@ export default function EventsPage() {
   };
 
   return (
-    <div className="container mx-auto">
+    <div className="container mx-auto space-y-6">
       <EventList
         data={eventsData?.data || []}
         isLoading={isLoading}
@@ -81,8 +100,10 @@ export default function EventsPage() {
             totalPages: 0,
           }
         }
+        filters={filters}
         onPageChange={handlePageChange}
         onLimitChange={handleLimitChange}
+        onFiltersChange={handleFiltersChange}
         onRefetch={refetch}
         headerActions={
           isAdmin && (

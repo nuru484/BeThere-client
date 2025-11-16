@@ -1,11 +1,21 @@
 // src/components/events/EventList.jsx
+import { useState, useEffect } from "react";
 import EventListItem from "./EventListItem";
 import EventListItemSkeleton from "./EventListItemSkeleton";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Search } from "lucide-react";
+import { Calendar, Search, X, MapPin } from "lucide-react";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
 import Pagination from "@/components/ui/Pagination";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import PropTypes from "prop-types";
 
 const EventList = ({
@@ -14,17 +24,54 @@ const EventList = ({
   isError,
   error,
   meta,
+  filters,
   onPageChange,
   onLimitChange,
+  onFiltersChange,
   onRefetch,
   headerActions,
 }) => {
+  const [searchInput, setSearchInput] = useState(filters?.search || "");
+  const [locationInput, setLocationInput] = useState(filters?.location || "");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchInput !== filters?.search) {
+        onFiltersChange({ search: searchInput || undefined });
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (locationInput !== filters?.location) {
+        onFiltersChange({ location: locationInput || undefined });
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [locationInput]);
+
+  const handleClearFilters = () => {
+    setSearchInput("");
+    setLocationInput("");
+    onFiltersChange({
+      search: undefined,
+      type: undefined,
+      location: undefined,
+    });
+  };
+
+  const hasActiveFilters =
+    filters?.search || filters?.type || filters?.location;
+
   if (isLoading) {
     return (
       <div className="space-y-6">
         {/* Header Skeleton */}
         <div className="max-w-5xl mx-auto flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-4 sm:pb-6 border-b">
-          {/* Title Section Skeleton */}
           <div className="flex items-center gap-3">
             <Skeleton className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl" />
             <div className="min-w-0 flex-1 space-y-2">
@@ -32,15 +79,22 @@ const EventList = ({
               <Skeleton className="h-4 w-24 sm:w-32" />
             </div>
           </div>
-
-          {/* Action Buttons Skeleton */}
           <div className="flex items-center gap-2 sm:gap-3">
             <Skeleton className="h-9 w-28" />
           </div>
         </div>
 
+        {/* Filters Skeleton */}
+        <div className="max-w-5xl mx-auto space-y-3">
+          <Skeleton className="h-10 w-full" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </div>
+
         {/* Event List Item Skeletons */}
-        <div className="space-y-4">
+        <div className="max-w-5xl mx-auto space-y-4">
           {Array.from({ length: 5 }).map((_, i) => (
             <EventListItemSkeleton key={i} />
           ))}
@@ -72,7 +126,6 @@ const EventList = ({
     <div className="space-y-6">
       {/* Professional Header */}
       <div className="max-w-5xl mx-auto flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-4 sm:pb-6 border-b">
-        {/* Title Section */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-sm">
             <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
@@ -89,7 +142,6 @@ const EventList = ({
           </div>
         </div>
 
-        {/* Action Buttons */}
         {headerActions && (
           <div className="flex items-center gap-2 sm:gap-3">
             {headerActions}
@@ -97,23 +149,111 @@ const EventList = ({
         )}
       </div>
 
+      {/* Search and Filters */}
+      <div className="max-w-5xl mx-auto space-y-3">
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search events by title, description, type, or city..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="pl-10 pr-10"
+          />
+          {searchInput && (
+            <button
+              onClick={() => setSearchInput("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Filter Controls */}
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1 w-full">
+            {/* Type Filter */}
+            <Select
+              value={filters?.type || "all"}
+              onValueChange={(value) =>
+                onFiltersChange({ type: value === "all" ? undefined : value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Event Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="Conference">Conference</SelectItem>
+                <SelectItem value="Workshop">Workshop</SelectItem>
+                <SelectItem value="Seminar">Seminar</SelectItem>
+                <SelectItem value="Meetup">Meetup</SelectItem>
+                <SelectItem value="Webinar">Webinar</SelectItem>
+                <SelectItem value="Festival">Festival</SelectItem>
+                <SelectItem value="Exhibition">Exhibition</SelectItem>
+                <SelectItem value="Concert">Concert</SelectItem>
+                <SelectItem value="Sports">Sports</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Location Filter */}
+            <div className="relative">
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Filter by location..."
+                value={locationInput}
+                onChange={(e) => setLocationInput(e.target.value)}
+                className="pl-10 pr-10"
+              />
+              {locationInput && (
+                <button
+                  onClick={() => setLocationInput("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Clear Filters Button */}
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearFilters}
+              className="whitespace-nowrap w-full sm:w-auto"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Clear Filters
+            </Button>
+          )}
+        </div>
+      </div>
+
       {/* Event List */}
       {eventCount > 0 ? (
         <>
-          <div className="space-y-4">
+          <div className="space-y-4 max-w-5xl mx-auto">
             {data.map((event) => (
               <EventListItem key={event.id} event={event} />
             ))}
           </div>
 
           {/* Pagination */}
-          <Pagination
-            meta={meta}
-            onPageChange={onPageChange}
-            onLimitChange={onLimitChange}
-            showPageSizeSelector={true}
-            pageSizeOptions={[5, 10, 25, 50]}
-          />
+          <div className="max-w-5xl mx-auto">
+            <Pagination
+              meta={meta}
+              onPageChange={onPageChange}
+              onLimitChange={onLimitChange}
+              showPageSizeSelector={true}
+              pageSizeOptions={[5, 10, 25, 50]}
+            />
+          </div>
         </>
       ) : (
         <div className="text-center py-12 sm:py-16">
@@ -124,9 +264,16 @@ const EventList = ({
             <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
               No Events Found
             </h3>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              No events available at the moment. Check back later.
+            <p className="text-sm sm:text-base text-muted-foreground mb-4">
+              {hasActiveFilters
+                ? "No events match your current filters. Try adjusting your search criteria."
+                : "No events available at the moment. Check back later."}
             </p>
+            {hasActiveFilters && (
+              <Button variant="outline" size="sm" onClick={handleClearFilters}>
+                Clear Filters
+              </Button>
+            )}
           </div>
         </div>
       )}
@@ -145,8 +292,10 @@ EventList.propTypes = {
     limit: PropTypes.number.isRequired,
     totalPages: PropTypes.number.isRequired,
   }).isRequired,
+  filters: PropTypes.object,
   onPageChange: PropTypes.func.isRequired,
   onLimitChange: PropTypes.func.isRequired,
+  onFiltersChange: PropTypes.func.isRequired,
   onRefetch: PropTypes.func.isRequired,
   headerActions: PropTypes.node,
 };
