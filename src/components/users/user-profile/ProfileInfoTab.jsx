@@ -57,7 +57,6 @@ const ProfileInfoTab = ({ user }) => {
     useUpdateUserProfile();
   const { mutateAsync: updateProfilePicture, isLoading: isUpdatingPicture } =
     useUpdateUserProfilePicture();
-
   const form = useForm({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -67,7 +66,6 @@ const ProfileInfoTab = ({ user }) => {
       phone: user.phone || "",
     },
   });
-
   const userInitials = `${user.firstName?.charAt(0) || ""}${
     user.lastName?.charAt(0) || ""
   }`.toUpperCase();
@@ -75,19 +73,15 @@ const ProfileInfoTab = ({ user }) => {
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setIsProcessingImage(true);
     setIsEditingAvatar(true);
-
     try {
       const isHeic =
         file.name.toLowerCase().endsWith(".heic") ||
         file.type === "image/heic" ||
         file.type === "image/heif" ||
         file.type === "";
-
       let previewBlob = file;
-
       if (isHeic) {
         try {
           previewBlob = await heic2any({
@@ -102,18 +96,15 @@ const ProfileInfoTab = ({ user }) => {
           return;
         }
       }
-
       if (file.size > 5 * 1024 * 1024) {
         toast.error("Image size should be less than 5MB");
         setIsProcessingImage(false);
         setIsEditingAvatar(false);
         return;
       }
-
       if (imagePreview) {
         URL.revokeObjectURL(imagePreview);
       }
-
       const previewUrl = URL.createObjectURL(previewBlob);
       setImagePreview(previewUrl);
       setSelectedAvatarFile(file);
@@ -188,13 +179,10 @@ const ProfileInfoTab = ({ user }) => {
       toast.error("Please select an image first");
       return;
     }
-
-    // Defensive re-validation in case mobile browser provides incorrect type
     if (!selectedAvatarFile.type.startsWith("image/")) {
       toast.error("Invalid image file selected");
       return;
     }
-
     const toastId = toast.loading("Updating profile picture...");
     try {
       const formData = new FormData();
@@ -226,6 +214,7 @@ const ProfileInfoTab = ({ user }) => {
   };
 
   const isLoading = isUpdatingProfile || isUpdatingPicture;
+  const hasImage = user.profilePicture || imagePreview;
 
   return (
     <div className="space-y-6">
@@ -239,7 +228,6 @@ const ProfileInfoTab = ({ user }) => {
           Manage your personal information and account details
         </p>
       </div>
-
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-5 border-2 border-border rounded-lg bg-card shadow-sm">
           <div className="relative group">
@@ -251,45 +239,45 @@ const ProfileInfoTab = ({ user }) => {
               accept="image/*,.heic,.heif"
               disabled={isLoading || isProcessingImage}
             />
-
             <div className="relative">
               <Avatar
                 className={`h-24 w-24 ring-4 transition-all duration-200 ${
                   isEditingAvatar
                     ? "ring-primary shadow-lg shadow-primary/20"
                     : "ring-primary/20 dark:ring-primary/30"
-                } ${
-                  (user.profilePicture || imagePreview) && !isProcessingImage
-                    ? "cursor-pointer hover:opacity-90"
-                    : ""
                 }`}
-                onClick={handleAvatarClick}
               >
                 <AvatarImage
                   src={(imagePreview || user.profilePicture) ?? undefined}
                   alt={`${user.firstName} ${user.lastName}`}
-                  className="object-cover"
+                  className={`object-cover ${
+                    hasImage && !isProcessingImage
+                      ? "cursor-pointer hover:opacity-90 transition-opacity"
+                      : ""
+                  }`}
+                  onClick={
+                    hasImage && !isProcessingImage
+                      ? handleAvatarClick
+                      : undefined
+                  }
                 />
                 <AvatarFallback className="bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground font-bold text-2xl">
                   {userInitials}
                 </AvatarFallback>
               </Avatar>
-
               {/* Processing Overlay */}
               {isProcessingImage && (
                 <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-full backdrop-blur-sm">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
               )}
-
-              {/* Zoom Icon on Hover */}
-              {(user.profilePicture || imagePreview) && !isProcessingImage && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer">
+              {/* Zoom Icon on Hover - Only if image exists and not processing */}
+              {hasImage && !isProcessingImage && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
                   <ZoomIn className="h-8 w-8 text-white" />
                 </div>
               )}
             </div>
-
             {!isEditingAvatar && !isProcessingImage && (
               <Button
                 type="button"
@@ -304,7 +292,6 @@ const ProfileInfoTab = ({ user }) => {
                 <Camera className="h-4 w-4" />
               </Button>
             )}
-
             {/* Remove Preview Button */}
             {imagePreview && !isProcessingImage && (
               <Button
@@ -318,7 +305,6 @@ const ProfileInfoTab = ({ user }) => {
                 <X className="h-3.5 w-3.5" />
               </Button>
             )}
-
             {/* New Badge */}
             {imagePreview && !isProcessingImage && (
               <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2">
@@ -327,7 +313,6 @@ const ProfileInfoTab = ({ user }) => {
                 </Badge>
               </div>
             )}
-
             {/* Processing Badge */}
             {isProcessingImage && (
               <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2">
@@ -337,7 +322,6 @@ const ProfileInfoTab = ({ user }) => {
               </div>
             )}
           </div>
-
           <div className="flex-1">
             <p className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
               Profile Picture
@@ -356,8 +340,8 @@ const ProfileInfoTab = ({ user }) => {
                 ? "Processing image, please wait..."
                 : isEditingAvatar
                 ? "Select a new image (Max 5MB, JPG, PNG, GIF, or HEIC)"
-                : user.profilePicture || imagePreview
-                ? "Click avatar to view full size • Hover to change"
+                : hasImage
+                ? "Click image to view full size • Hover to change"
                 : "Hover over avatar or click camera icon to upload"}
             </p>
             {imagePreview && !isProcessingImage && (
@@ -395,7 +379,6 @@ const ProfileInfoTab = ({ user }) => {
             )}
           </div>
         </div>
-
         {/* Edit Mode Indicator */}
         {isEditing && (
           <div className="bg-primary/5 dark:bg-primary/10 border-2 border-primary/30 dark:border-primary/40 rounded-lg p-4 animate-in fade-in-50 duration-300 shadow-sm">
@@ -408,7 +391,6 @@ const ProfileInfoTab = ({ user }) => {
             </p>
           </div>
         )}
-
         {/* Profile Form */}
         <Form {...form}>
           <form
@@ -442,7 +424,6 @@ const ProfileInfoTab = ({ user }) => {
                   </FormItem>
                 )}
               />
-
               {/* Last Name */}
               <FormField
                 control={form.control}
@@ -468,7 +449,6 @@ const ProfileInfoTab = ({ user }) => {
                   </FormItem>
                 )}
               />
-
               {/* Email */}
               <FormField
                 control={form.control}
@@ -496,7 +476,6 @@ const ProfileInfoTab = ({ user }) => {
                   </FormItem>
                 )}
               />
-
               {/* Phone */}
               <FormField
                 control={form.control}
@@ -524,7 +503,6 @@ const ProfileInfoTab = ({ user }) => {
                   </FormItem>
                 )}
               />
-
               {/* Role (Read-only) */}
               <div className="space-y-2">
                 <label className="text-sm font-semibold flex items-center gap-2 text-foreground">
@@ -541,7 +519,6 @@ const ProfileInfoTab = ({ user }) => {
                 </div>
               </div>
             </div>
-
             {/* Action Buttons */}
             <Separator className="my-6 bg-border" />
             <div className="flex flex-col sm:flex-row gap-3 justify-end pt-2">
@@ -591,7 +568,6 @@ const ProfileInfoTab = ({ user }) => {
           </form>
         </Form>
       </div>
-
       {/* Full Screen Image Viewer Dialog */}
       <Dialog open={isImageViewerOpen} onOpenChange={setIsImageViewerOpen}>
         <DialogContent className="max-w-4xl w-[95vw] max-h-[95vh] p-0 overflow-hidden">

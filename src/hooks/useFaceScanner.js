@@ -99,6 +99,14 @@ export const useFaceScanner = (distanceThreshold = 0.2) => {
     }
   };
 
+  const reset = useCallback(() => {
+    setResult(null);
+    setScanStep("idle");
+    setError(null);
+    setStatus("Ready to scan face.");
+    scanSamples.current = [];
+  }, []);
+
   return {
     videoRef,
     status,
@@ -108,5 +116,6 @@ export const useFaceScanner = (distanceThreshold = 0.2) => {
     isInitializing,
     webcamActive,
     startScan,
+    reset, 
   };
 };

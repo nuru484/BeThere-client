@@ -1,7 +1,7 @@
-// src/components/ScanUserFace.jsx
+// src/components/FaceScanner.jsx
 import PropTypes from "prop-types";
 import { useFaceScanner } from "@/hooks/useFaceScanner";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function FaceScanner({
   buttonText = "Scan Face",
@@ -18,22 +18,35 @@ export default function FaceScanner({
     isInitializing,
     webcamActive,
     startScan,
+    reset,
   } = useFaceScanner();
 
   const [shouldShowInternalError, setShouldShowInternalError] = useState(false);
+  const hasEmittedRef = useRef(false);
 
   useEffect(() => {
-    if (result && scanStep === "complete" && onScanComplete) {
+    if (scanStep === "idle") {
+      hasEmittedRef.current = false;
+    }
+  }, [scanStep]);
+
+  useEffect(() => {
+    if (
+      result &&
+      scanStep === "complete" &&
+      onScanComplete &&
+      !hasEmittedRef.current
+    ) {
+      hasEmittedRef.current = true;
       onScanComplete(result);
     }
   }, [result, scanStep, onScanComplete]);
 
+  // Auto-hide internal error after 5s
   useEffect(() => {
     if (scanStep === "failed" && error) {
       setShouldShowInternalError(true);
-      const timer = setTimeout(() => {
-        setShouldShowInternalError(false);
-      }, 5000);
+      const timer = setTimeout(() => setShouldShowInternalError(false), 5000);
       return () => clearTimeout(timer);
     } else {
       setShouldShowInternalError(false);
@@ -80,39 +93,40 @@ export default function FaceScanner({
     };
   };
 
+  const handleClick = () => {
+    hasEmittedRef.current = false;
+    reset(); // Reset internal state
+    startScan();
+  };
+
   const renderStatusIndicator = () => {
     let bgColor = "bg-gray-50";
     let textColor = "text-gray-700";
     let displayStatus = status;
     let showRefreshButton = false;
 
-    // Internal errors ALWAYS override external status
     if ((scanStep === "failed" || error) && shouldShowInternalError) {
       bgColor = "bg-red-50";
       textColor = "text-red-700";
       displayStatus = error || status;
       showRefreshButton = true;
-    }
-    // Then check for externalStatus
-    else if (externalStatus) {
+    } else if (externalStatus) {
       displayStatus = externalStatus.message || externalStatus;
-
-      if (externalStatus.type === "loading" || externalStatus.type === "info") {
+      const type = externalStatus.type;
+      if (type === "loading" || type === "info") {
         bgColor = "bg-blue-50";
         textColor = "text-blue-700";
-      } else if (externalStatus.type === "success") {
+      } else if (type === "success") {
         bgColor = "bg-green-50";
         textColor = "text-green-700";
-      } else if (externalStatus.type === "error") {
+      } else if (type === "error") {
         bgColor = "bg-red-50";
         textColor = "text-red-700";
-      } else if (externalStatus.type === "warning") {
+      } else if (type === "warning") {
         bgColor = "bg-yellow-50";
         textColor = "text-yellow-700";
       }
-    }
-    // Handle other internal states
-    else if (!webcamActive && !isInitializing) {
+    } else if (!webcamActive && !isInitializing) {
       bgColor = "bg-red-50";
       textColor = "text-red-700";
       displayStatus = "Webcam not active. Please allow camera access.";
@@ -145,29 +159,22 @@ export default function FaceScanner({
     );
   };
 
-  const button = getButtonState();
-
-  // Face detection overlay
   const renderFaceOverlay = () => {
     if (!webcamActive) return null;
-
     return (
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="relative w-64 h-80">
-          {/* Corner brackets */}
           <div className="absolute top-0 left-0 w-12 h-12 border-l-4 border-t-4 border-blue-500 rounded-tl-lg"></div>
           <div className="absolute top-0 right-0 w-12 h-12 border-r-4 border-t-4 border-blue-500 rounded-tr-lg"></div>
           <div className="absolute bottom-0 left-0 w-12 h-12 border-l-4 border-b-4 border-blue-500 rounded-bl-lg"></div>
           <div className="absolute bottom-0 right-0 w-12 h-12 border-r-4 border-b-4 border-blue-500 rounded-br-lg"></div>
 
-          {/* Scanning line animation */}
           {scanStep === "started" && (
             <div className="absolute inset-0 overflow-hidden">
               <div className="absolute w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent animate-scan"></div>
             </div>
           )}
 
-          {/* Status indicator dot */}
           <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
             <div className="flex items-center gap-2 bg-black/70 px-3 py-1.5 rounded-full">
               <div
@@ -197,10 +204,11 @@ export default function FaceScanner({
     );
   };
 
+  const button = getButtonState();
+
   return (
     <div className="w-full max-w-2xl">
       <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6 rounded-2xl shadow-2xl">
-        {/* Video container */}
         <div className="relative bg-black rounded-xl overflow-hidden mb-6 shadow-inner">
           <video
             ref={videoRef}
@@ -210,17 +218,14 @@ export default function FaceScanner({
             className="w-full h-80 object-cover"
           />
           {renderFaceOverlay()}
-
-          {/* Corner decorations */}
           <div className="absolute top-4 left-4 w-8 h-8 border-l-2 border-t-2 border-cyan-400/50"></div>
           <div className="absolute top-4 right-4 w-8 h-8 border-r-2 border-t-2 border-cyan-400/50"></div>
           <div className="absolute bottom-4 left-4 w-8 h-8 border-l-2 border-b-2 border-cyan-400/50"></div>
           <div className="absolute bottom-4 right-4 w-8 h-8 border-r-2 border-b-2 border-cyan-400/50"></div>
         </div>
 
-        {/* Action button */}
         <button
-          onClick={startScan}
+          onClick={handleClick}
           className={`w-full py-4 px-6 text-white rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg ${button.className}`}
           disabled={button.disabled}
         >
@@ -252,10 +257,8 @@ export default function FaceScanner({
         </button>
       </div>
 
-      {/* Status indicator */}
       {renderStatusIndicator()}
 
-      {/* Instructions */}
       {webcamActive &&
         scanStep === "idle" &&
         !externalStatus &&

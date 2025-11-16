@@ -29,6 +29,7 @@ export default function MarkAttendance({ type = "in" }) {
   const watchIdRef = useRef(null);
   const authSystemRef = useRef(null);
   const hasSubmittedRef = useRef(false);
+  const toastIdRef = useRef(null);
 
   const {
     data: userFaceData,
@@ -39,10 +40,8 @@ export default function MarkAttendance({ type = "in" }) {
   } = useGetUserFaceScan(user?.id);
 
   const storedDescriptor = userFaceData?.data?.faceScan;
-
   const { mutate: createAttendance, isPending: isCreating } =
     useCreateAttendance();
-
   const { mutate: updateAttendance, isPending: isUpdating } =
     useUpdateAttendance();
 
@@ -64,11 +63,9 @@ export default function MarkAttendance({ type = "in" }) {
     setLocationError("");
     setLatitude(null);
     setLongitude(null);
-
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
     }
-
     watchIdRef.current = navigator.geolocation.watchPosition(
       (position) => {
         setLatitude(position.coords.latitude);
@@ -93,7 +90,6 @@ export default function MarkAttendance({ type = "in" }) {
       setLocationError("Geolocation is not supported by your browser.");
       return;
     }
-
     navigator.permissions.query({ name: "geolocation" }).then((result) => {
       if (result.state === "denied") {
         setLocationError(
@@ -116,143 +112,90 @@ export default function MarkAttendance({ type = "in" }) {
 
   const handleScanComplete = useCallback(
     async (scanResult) => {
-      if (hasSubmittedRef.current) {
-        return;
-      }
-
+      if (hasSubmittedRef.current) return;
       if (!scanResult || !scanResult.descriptor) {
         toast.error("Invalid face scan result.");
         return;
       }
 
       setIsVerifying(true);
-      setVerificationStatus({
-        message: "Verifying face scan...",
-        type: "loading",
-      });
+      toastIdRef.current = toast.loading("Verifying face...");
 
       try {
         if (!storedDescriptor) {
-          toast.error(
-            "No stored face scan found. Please register your face first."
-          );
-          setVerificationStatus({
-            message:
-              "No stored face scan found. Please register your face first.",
-            type: "error",
-          });
+          const msg =
+            "No stored face scan found. Please register your face first.";
+          toast.error(msg, { id: toastIdRef.current });
+          setVerificationStatus({ message: msg, type: "error" });
           setIsVerifying(false);
           return;
         }
 
-        // Verify face using FaceAuthSystem
         const verificationResult = authSystemRef.current.verifyFaceScan(
           scanResult.descriptor,
           storedDescriptor
         );
 
-        if (!verificationResult.success) {
-          toast.error(
-            "Face verification failed: " + verificationResult.message
-          );
-          setVerificationStatus({
-            message: "Face verification failed: " + verificationResult.message,
-            type: "error",
-          });
-          setIsVerifying(false);
-          return;
-        }
-
-        if (!verificationResult.isMatch) {
-          toast.error(
+        if (!verificationResult.success || !verificationResult.isMatch) {
+          const msg =
             verificationResult.message ||
-              "Face does not match. Authentication failed."
-          );
-          setVerificationStatus({
-            message:
-              verificationResult.message ||
-              "Face does not match. Authentication failed.",
-            type: "error",
-          });
+            "Face does not match. Authentication failed.";
+          toast.error(msg, { id: toastIdRef.current });
+          setVerificationStatus({ message: msg, type: "error" });
           setIsVerifying(false);
           return;
         }
 
-        // Face verified successfully
-        toast.success(
-          verificationResult.message || "Face verified successfully!"
-        );
-        setVerificationStatus({
-          message: verificationResult.message || "Face verified successfully!",
-          type: "success",
-        });
+        const successMsg =
+          verificationResult.message || "Face verified successfully!";
+        toast.success(successMsg, { id: toastIdRef.current });
+        setVerificationStatus({ message: successMsg, type: "success" });
 
-        // Check location
         if (!latitude || !longitude) {
-          setLocationError(
-            "Location is required to mark attendance. Please enable location services."
-          );
-          setVerificationStatus({
-            message:
-              "Location is required to mark attendance. Please enable location services.",
-            type: "error",
-          });
+          const locMsg =
+            "Location is required to mark attendance. Please enable location services.";
+          toast.error(locMsg, { id: toastIdRef.current });
+          setVerificationStatus({ message: locMsg, type: "error" });
           setIsVerifying(false);
+          hasSubmittedRef.current = false;
           return;
         }
 
         hasSubmittedRef.current = true;
-
-        const attendanceData = {
-          latitude,
-          longitude,
-        };
-
         setVerificationStatus({
           message: `Marking attendance ${type}...`,
           type: "loading",
         });
 
         markAttendance(
-          { eventId: parseInt(eventId), attendanceData },
+          {
+            eventId: parseInt(eventId),
+            attendanceData: { latitude, longitude },
+          },
           {
             onSuccess: (response) => {
-              toast.success(
-                response?.message || `Attendance ${type} marked successfully!`
-              );
-              setVerificationStatus({
-                message:
-                  response?.message ||
-                  `Attendance ${type} marked successfully!`,
-                type: "success",
-              });
+              const msg =
+                response?.message || `Attendance ${type} marked successfully!`;
+              toast.success(msg, { id: toastIdRef.current });
+              setVerificationStatus({ message: msg, type: "success" });
               setIsVerifying(false);
-              setTimeout(() => {
-                navigate(`/dashboard/events/${eventId}`);
-              }, 2000);
+              setTimeout(() => navigate(`/dashboard/events/${eventId}`), 2000);
             },
             onError: (error) => {
               const { message } = extractApiErrorMessage(error);
-              toast.error(message || `Failed to mark attendance ${type}.`);
-              setVerificationStatus({
-                message: message || `Failed to mark attendance ${type}.`,
-                type: "error",
-              });
+              const errMsg = message || `Failed to mark attendance ${type}.`;
+              toast.error(errMsg, { id: toastIdRef.current });
+              setVerificationStatus({ message: errMsg, type: "error" });
               setIsVerifying(false);
               hasSubmittedRef.current = false;
             },
           }
         );
       } catch (error) {
-        console.error("Error during face verification:", error);
-        toast.error(
-          error?.message || "An error occurred during face verification."
-        );
-        setVerificationStatus({
-          message:
-            error?.message || "An error occurred during face verification.",
-          type: "error",
-        });
+        const msg =
+          error?.message || "An error occurred during face verification.";
+        toast.error(msg, { id: toastIdRef.current });
+        setVerificationStatus({ message: msg, type: "error" });
         setIsVerifying(false);
         hasSubmittedRef.current = false;
       }
@@ -269,17 +212,8 @@ export default function MarkAttendance({ type = "in" }) {
   );
 
   const getExternalStatus = () => {
-    if (locationError) {
-      return {
-        message: locationError,
-        type: "error",
-      };
-    }
-
-    if (verificationStatus) {
-      return verificationStatus;
-    }
-
+    if (locationError) return { message: locationError, type: "error" };
+    if (verificationStatus) return verificationStatus;
     return null;
   };
 
@@ -304,7 +238,6 @@ export default function MarkAttendance({ type = "in" }) {
       <div className="container mx-auto max-w-6xl space-y-4 sm:space-y-6">
         {/* Header Section */}
         <div className="space-y-3 sm:space-y-0">
-          {/* Back Button - Mobile Only */}
           <div className="flex justify-end sm:hidden">
             <Button
               variant="outline"
@@ -316,8 +249,6 @@ export default function MarkAttendance({ type = "in" }) {
               Back
             </Button>
           </div>
-
-          {/* Header with Back Button */}
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-2.5 sm:gap-3 flex-1 min-w-0">
               <div
@@ -325,7 +256,6 @@ export default function MarkAttendance({ type = "in" }) {
               >
                 <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-
               <div className="flex-1 min-w-0">
                 <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 leading-tight break-words">
                   Mark Attendance {isCheckIn ? "In" : "Out"}
@@ -337,8 +267,6 @@ export default function MarkAttendance({ type = "in" }) {
                 </p>
               </div>
             </div>
-
-            {/* Back Button - Desktop Only */}
             <Button
               variant="outline"
               className="hidden sm:flex border-gray-200 text-gray-700 hover:bg-gray-50 flex-shrink-0"
@@ -352,9 +280,7 @@ export default function MarkAttendance({ type = "in" }) {
 
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left Column - Side Cards (Hidden on Mobile) */}
           <div className="hidden lg:flex lg:flex-col gap-6">
-            {/* Location Status Notice */}
             {latitude && longitude && !locationError && (
               <div className="bg-green-50 border border-green-200 p-4 rounded-lg h-fit">
                 <div className="flex items-start gap-3">
@@ -371,8 +297,6 @@ export default function MarkAttendance({ type = "in" }) {
                 </div>
               </div>
             )}
-
-            {/* Important Notice */}
             <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg h-fit">
               <div className="flex items-start gap-3">
                 <svg
@@ -403,9 +327,7 @@ export default function MarkAttendance({ type = "in" }) {
 
           {/* Center Column - Face Scanner */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Mobile Cards - Shown only on small screens */}
             <div className="lg:hidden space-y-4">
-              {/* Location Status Notice */}
               {latitude && longitude && !locationError && (
                 <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg">
                   <div className="flex items-start gap-3">
@@ -422,8 +344,6 @@ export default function MarkAttendance({ type = "in" }) {
                   </div>
                 </div>
               )}
-
-              {/* Important Notice */}
               <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
                 <div className="flex items-start gap-3">
                   <svg
@@ -452,7 +372,6 @@ export default function MarkAttendance({ type = "in" }) {
               </div>
             </div>
 
-            {/* Face Scanner Component or Skeleton - Centered */}
             <div className="flex justify-center">
               {fetchingUserFaceData ? (
                 <FaceScannerSkeleton />
