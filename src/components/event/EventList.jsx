@@ -82,8 +82,9 @@ const EventList = ({
               Events
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground mt-0.5">
-              {meta.total.toLocaleString()} event{meta.total !== 1 ? "s" : ""}{" "}
-              {meta.total === 0 ? "available" : "found"}
+              {meta.totalRecords.toLocaleString()} event
+              {meta.totalRecords !== 1 ? "s" : ""}{" "}
+              {meta.totalRecords === 0 ? "available" : "found"}
             </p>
           </div>
         </div>
@@ -111,7 +112,7 @@ const EventList = ({
             onPageChange={onPageChange}
             onLimitChange={onLimitChange}
             showPageSizeSelector={true}
-            pageSizeOptions={[10, 25, 50]}
+            pageSizeOptions={[5, 10, 25, 50]}
           />
         </>
       ) : (
@@ -139,7 +140,7 @@ EventList.propTypes = {
   isError: PropTypes.bool.isRequired,
   error: PropTypes.object,
   meta: PropTypes.shape({
-    total: PropTypes.number.isRequired,
+    totalRecords: PropTypes.number.isRequired,
     page: PropTypes.number.isRequired,
     limit: PropTypes.number.isRequired,
     totalPages: PropTypes.number.isRequired,

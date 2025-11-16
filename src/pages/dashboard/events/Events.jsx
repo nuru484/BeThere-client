@@ -74,8 +74,8 @@ export default function EventsPage() {
         isError={isError}
         error={error}
         meta={
-          eventsData?.meta || {
-            total: 0,
+          eventsData?.pagination || {
+            totalRecords: 0,
             page: 1,
             limit: 10,
             totalPages: 0,

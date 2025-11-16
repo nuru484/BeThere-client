@@ -16,10 +16,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useDeleteEvent } from "@/hooks/useEvent";
+import { useGetUserEventAttendance } from "@/hooks/useAttendance";
 import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
+import { getCurrentSession } from "@/utils/getCurrentSession";
 import toast from "react-hot-toast";
 import PropTypes from "prop-types";
 import { useAuth } from "@/hooks/useAuth";
+import { useMemo } from "react";
 
 const EventListItem = ({ event }) => {
   const navigate = useNavigate();
@@ -29,7 +32,63 @@ const EventListItem = ({ event }) => {
 
   const { mutate: deleteEvent, isLoading: isDeleting } = useDeleteEvent();
 
-  const { id, title, type, location, date, description } = event;
+  const { id, title, type, location, date, description, isRecurring } = event;
+
+  // Fetch user's attendance for this event
+  const { data: userAttendanceData, isLoading: isLoadingAttendance } =
+    useGetUserEventAttendance(user?.id, id, {
+      limit: 100,
+    });
+
+  const userAttendances = userAttendanceData?.data || [];
+
+  // Determine the current session for recurring events
+  const currentSession = useMemo(() => {
+    if (isRecurring) {
+      return getCurrentSession(event);
+    }
+    return null;
+  }, [event, isRecurring]);
+
+  // Find attendance for the current session
+  const currentSessionAttendance = currentSession
+    ? userAttendances.find((att) => att.sessionId === currentSession.id)
+    : null;
+
+  // For non-recurring events, find the most recent attendance
+  const latestAttendance =
+    !isRecurring && userAttendances.length > 0
+      ? userAttendances.reduce((latest, current) => {
+          const latestTime = new Date(latest.checkInTime).getTime();
+          const currentTime = new Date(current.checkInTime).getTime();
+          return currentTime > latestTime ? current : latest;
+        }, userAttendances[0])
+      : null;
+
+  // Determine sign-in/sign-out status based on event type
+  let hasSignedIn, hasSignedOut, showSignInButton, showSignOutButton;
+
+  if (isRecurring && currentSession) {
+    // For recurring events: check current session attendance
+    hasSignedIn = currentSessionAttendance?.checkInTime;
+    hasSignedOut = currentSessionAttendance?.checkOutTime;
+
+    showSignInButton = !hasSignedIn;
+    showSignOutButton = hasSignedIn && !hasSignedOut;
+  } else if (!isRecurring) {
+    // For non-recurring events: check latest attendance
+    hasSignedIn = latestAttendance?.checkInTime;
+    hasSignedOut = latestAttendance?.checkOutTime;
+
+    // Only show sign-in if user has never signed in
+    showSignInButton = !hasSignedIn;
+    // Only show sign-out if user has signed in but hasn't signed out yet
+    showSignOutButton = hasSignedIn && !hasSignedOut;
+  } else {
+    // If recurring but no current session, show both buttons
+    showSignInButton = true;
+    showSignOutButton = true;
+  }
 
   const handleView = (e) => {
     e.stopPropagation();
@@ -183,30 +242,39 @@ const EventListItem = ({ event }) => {
                   </>
                 ) : null}
 
-                {/* Sign In/Out Buttons - Available to all users */}
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handleSignIn}
-                  className={`cursor-pointer bg-emerald-600 hover:bg-emerald-700 ${
-                    isAdmin ? "sm:col-span-1" : ""
-                  }`}
-                >
-                  <LogIn className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
-                  <span className="hidden sm:inline truncate">Sign In</span>
-                  <span className="sm:hidden truncate">In</span>
-                </Button>
+                {/* Sign In Button - Conditional */}
+                {showSignInButton && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleSignIn}
+                    disabled={isLoadingAttendance}
+                    className={`cursor-pointer bg-emerald-600 hover:bg-emerald-700 ${
+                      isAdmin ? "sm:col-span-1" : ""
+                    }`}
+                  >
+                    <LogIn className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                    <span className="hidden sm:inline truncate">Sign In</span>
+                    <span className="sm:hidden truncate">In</span>
+                  </Button>
+                )}
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSignOut}
-                  className={`cursor-pointer ${isAdmin ? "sm:col-span-1" : ""}`}
-                >
-                  <LogOut className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
-                  <span className="hidden sm:inline truncate">Sign Out</span>
-                  <span className="sm:hidden truncate">Out</span>
-                </Button>
+                {/* Sign Out Button - Conditional */}
+                {showSignOutButton && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSignOut}
+                    disabled={isLoadingAttendance}
+                    className={`cursor-pointer ${
+                      isAdmin ? "sm:col-span-1" : ""
+                    }`}
+                  >
+                    <LogOut className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                    <span className="hidden sm:inline truncate">Sign Out</span>
+                    <span className="sm:hidden truncate">Out</span>
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -236,6 +304,7 @@ EventListItem.propTypes = {
     type: PropTypes.string.isRequired,
     date: PropTypes.string,
     description: PropTypes.string,
+    isRecurring: PropTypes.bool,
     location: PropTypes.shape({
       name: PropTypes.string,
       city: PropTypes.string,
