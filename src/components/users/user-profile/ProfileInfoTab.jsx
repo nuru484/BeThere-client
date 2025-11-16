@@ -240,61 +240,70 @@ const ProfileInfoTab = ({ user }) => {
 
       {/* Profile Content */}
       <div className="space-y-6">
-        {/* Avatar Section */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-5 border-2 border-border rounded-lg bg-card shadow-sm">
           <div className="relative group">
-            {/* File input with mobile-friendly attributes */}
             <input
-              type="file"
-              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-              onChange={handleFileChange}
-              className="hidden"
               id="avatar-upload"
+              name="profilePicture"
+              type="file"
+              accept="image/*"
+              capture="user"
+              onChange={handleFileChange}
+              className="sr-only"
               disabled={isLoading}
             />
 
-            <Avatar
-              className={`h-24 w-24 ring-4 transition-all duration-200 ${
-                isEditingAvatar
-                  ? "ring-primary shadow-lg shadow-primary/20"
-                  : "ring-primary/20 dark:ring-primary/30"
-              }`}
+            {/* Make the Avatar clickable by wrapping it in a label */}
+            <label
+              htmlFor="avatar-upload"
+              className="cursor-pointer inline-block"
             >
-              <AvatarImage
-                src={(imagePreview || user.profilePicture) ?? undefined}
-                alt={`${user.firstName} ${user.lastName}`}
-                className="object-cover"
-              />
-              <AvatarFallback className="bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground font-bold text-2xl">
-                {userInitials}
-              </AvatarFallback>
-            </Avatar>
-
-            {/* Edit Avatar Button - Using label for better mobile support */}
-            {!isEditingAvatar && (
-              <label
-                htmlFor="avatar-upload"
-                className="absolute -bottom-2 -right-2 h-9 w-9 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={() => setIsEditingAvatar(true)}
-                title="Change profile picture"
-                style={isLoading ? { pointerEvents: "none", opacity: 0.5 } : {}}
+              <Avatar
+                className={`h-24 w-24 ring-4 transition-all duration-200 ${
+                  isEditingAvatar
+                    ? "ring-primary shadow-lg shadow-primary/20"
+                    : "ring-primary/20 dark:ring-primary/30"
+                }`}
               >
-                <Camera className="h-4 w-4" />
+                <AvatarImage
+                  src={(imagePreview || user.profilePicture) ?? undefined}
+                  alt={`${user.firstName} ${user.lastName}`}
+                  className="object-cover"
+                />
+                <AvatarFallback className="bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground font-bold text-2xl">
+                  {userInitials}
+                </AvatarFallback>
+              </Avatar>
+            </label>
+
+            {/* Edit Avatar Button — also uses label so tapping it opens the picker on mobile */}
+            {!isEditingAvatar && (
+              <label htmlFor="avatar-upload" title="Change profile picture">
+                <button
+                  type="button"
+                  size="sm"
+                  className="absolute -bottom-2 -right-2 h-9 w-9 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center"
+                  onClick={() => setIsEditingAvatar(true)}
+                  disabled={isLoading}
+                >
+                  <Camera className="h-4 w-4" />
+                </button>
               </label>
             )}
 
             {/* Remove Preview Button */}
             {imagePreview && (
-              <Button
+              <button
                 type="button"
                 size="sm"
                 variant="destructive"
-                className="absolute -top-2 -right-2 h-7 w-7 rounded-full p-0 shadow-lg"
+                className="absolute -top-2 -right-2 h-7 w-7 rounded-full p-0 shadow-lg bg-destructive text-destructive-foreground flex items-center justify-center"
                 onClick={removePreview}
                 disabled={isLoading}
+                aria-label="Remove selected image"
               >
                 <X className="h-3.5 w-3.5" />
-              </Button>
+              </button>
             )}
 
             {/* New Badge */}
@@ -310,21 +319,27 @@ const ProfileInfoTab = ({ user }) => {
           <div className="flex-1">
             <p className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
               Profile Picture
-              {!isEditingAvatar && !isLoading && (
-                <label htmlFor="avatar-upload" className="cursor-pointer">
-                  <Camera
-                    className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors"
-                    onClick={() => setIsEditingAvatar(true)}
-                    title="Click to change"
-                  />
-                </label>
+              {!isEditingAvatar && (
+                <span
+                  className="ml-1 text-muted-foreground cursor-pointer hover:text-primary transition-colors"
+                  onClick={() => {
+                    /* We still flip UI state to editing when user taps the camera icon */
+                    setIsEditingAvatar(true);
+                    /* no programmatic .click() — label handles the picker */
+                  }}
+                  role="button"
+                  aria-hidden="true"
+                >
+                  <Camera className="h-4 w-4" />
+                </span>
               )}
             </p>
             <p className="text-xs text-muted-foreground">
               {isEditingAvatar
-                ? "Select a new image (Max 5MB, JPG, PNG, GIF, or WebP)"
-                : "Hover over avatar or click camera icon to change"}
+                ? "Select a new image (Max 5MB, JPG, PNG, or GIF)"
+                : "Tap the avatar or camera icon to change"}
             </p>
+
             {imagePreview && (
               <div className="mt-3 flex gap-2">
                 <Button
@@ -360,8 +375,6 @@ const ProfileInfoTab = ({ user }) => {
             )}
           </div>
         </div>
-
-        {/* Edit Mode Indicator */}
         {isEditing && (
           <div className="bg-primary/5 dark:bg-primary/10 border-2 border-primary/30 dark:border-primary/40 rounded-lg p-4 animate-in fade-in-50 duration-300 shadow-sm">
             <p className="text-sm font-semibold text-primary dark:text-primary flex items-center gap-2">
@@ -373,7 +386,6 @@ const ProfileInfoTab = ({ user }) => {
             </p>
           </div>
         )}
-
         {/* Profile Form */}
         <Form {...form}>
           <form
