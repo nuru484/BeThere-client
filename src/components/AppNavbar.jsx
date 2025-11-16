@@ -1,5 +1,3 @@
-// FULL UPDATED AppNavbar.jsx WITH USER PROFILE DROPDOWN
-
 import React, { useState, useEffect } from "react";
 import {
   CalendarCheck2,
@@ -9,6 +7,7 @@ import {
   ScanFace,
   Menu,
   X,
+  FileBarChart,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -60,6 +59,12 @@ const getMenuItems = (user) => {
             icon: Users,
             url: "users",
             path: "/dashboard/users",
+          },
+          {
+            title: "Reports",
+            icon: FileBarChart,
+            url: "attendance/reports",
+            path: "/dashboard/attendance/reports",
           },
         ]
       : []),

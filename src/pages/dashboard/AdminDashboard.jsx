@@ -12,7 +12,6 @@ import AttendanceBarChart from "@/components/dashboard/admin/AttendanceBarChart"
 import AttendancePieChart from "@/components/dashboard/admin/AttendancePieChart";
 import EventTypeChart from "@/components/dashboard/admin/EventTypeChart";
 import { extractApiErrorMessage } from "@/utils/extract-api-error-message";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format, subDays } from "date-fns";
 import DashboardTotalsCardSkeleton from "@/components/dashboard/skeletons/DashboardTotalsCardSkeleton";
 import AttendanceDataSkeleton from "@/components/dashboard/skeletons/AttendanceDataSkeleton";
@@ -78,72 +77,6 @@ const AdminDashboard = () => {
         ) : (
           summary && (
             <>
-              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                <Card className="overflow-hidden">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Total Attendances
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold break-words">
-                      {summary.totalAttendances}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1 break-words">
-                      {summary.dateRange.from} to {summary.dateRange.to}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="overflow-hidden">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Unique Users
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold break-words">
-                      {summary.uniqueUsersAttended}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Attended during period
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="overflow-hidden">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Present Rate
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-600 break-words">
-                      {summary.statusPercentages.present}%
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1 break-words">
-                      {summary.statusCounts.present} attendances
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="overflow-hidden">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Absent Rate
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-red-600 break-words">
-                      {summary.statusPercentages.absent}%
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1 break-words">
-                      {summary.statusCounts.absent} absences
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
               {timeSeriesData && (
                 <div className="space-y-6">
                   <div className="w-full overflow-hidden">

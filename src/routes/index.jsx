@@ -18,6 +18,7 @@ import UserAttendancePage from "@/pages/dashboard/attendance/UserAttendance";
 import EventDetailsPage from "@/pages/dashboard/events/EventDetailsPage";
 import EventsPage from "@/pages/dashboard/events/Events";
 import UserProfilePage from "@/pages/dashboard/users/UserProfilePage";
+import AttendanceReportsPage from "@/pages/dashboard/attendance/ReportsPage";
 
 const Routes = () => {
   const protectedRoutes = [
@@ -82,6 +83,10 @@ const Routes = () => {
             {
               path: "/dashboard/events/:eventId/attendance-out",
               element: <EventSignOut />,
+            },
+            {
+              path: "/dashboard/attendance/reports",
+              element: <AttendanceReportsPage />,
             },
           ],
         },
