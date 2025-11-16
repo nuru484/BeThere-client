@@ -170,6 +170,10 @@ const ProfileInfoTab = ({ user }) => {
         response.message || "Profile picture updated successfully!"
       );
 
+      if (isViewingOwnProfile && response.data) {
+        logUserIn(response.data);
+      }
+
       setSelectedAvatarFile(null);
       setImagePreview(null);
       setIsEditingAvatar(false);

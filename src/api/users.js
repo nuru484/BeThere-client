@@ -33,11 +33,12 @@ export const updateUserProfile = async (userId, userData) =>
   await api.put(`/users/${userId}`, userData);
 
 export const updateUserProfilePicture = async (userId, formData) => {
-  if (!(formData instanceof FormData)) {
-    throw new Error("The second argument must be an instance of FormData");
-  }
-
-  return await api.patch(`/users/${userId}/profile-picture`, formData);
+  return await api.patch(`/users/${userId}/profile-picture`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+    transformRequest: (data) => data,
+  });
 };
 
 export const changePassword = async (data) =>
