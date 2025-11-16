@@ -20,6 +20,9 @@ createRoot(document.getElementById("root")).render(
             toastOptions={{
               className: "",
               duration: 5000,
+              loading: {
+                duration: 10000 * 3,
+              },
             }}
           />
           <Routes />

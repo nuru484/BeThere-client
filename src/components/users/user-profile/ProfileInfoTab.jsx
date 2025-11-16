@@ -1,5 +1,5 @@
 // src/components/user-profile/ProfileInfoTab.jsx
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
@@ -49,10 +49,8 @@ const ProfileInfoTab = ({ user }) => {
   const [isEditingAvatar, setIsEditingAvatar] = useState(false);
   const [selectedAvatarFile, setSelectedAvatarFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [isConvertingHeic, setIsConvertingHeic] = useState(false);
-  const [isPreparingPreview, setIsPreparingPreview] = useState(false);
-  const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
-  const fileInputRef = useRef(null);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
   const { user: currentUser, login: logUserIn } = useAuth();
   const isViewingOwnProfile = currentUser?.id === user?.id;
   const { mutateAsync: updateProfile, isLoading: isUpdatingProfile } =
@@ -78,52 +76,54 @@ const ProfileInfoTab = ({ user }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setIsProcessingImage(true);
     setIsEditingAvatar(true);
-    setIsPreparingPreview(true);
-    setIsConvertingHeic(false);
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image size should be less than 5MB");
-      setIsPreparingPreview(false);
-      return;
-    }
+    try {
+      const isHeic =
+        file.name.toLowerCase().endsWith(".heic") ||
+        file.type === "image/heic" ||
+        file.type === "image/heif" ||
+        file.type === "";
 
-    const isHeic =
-      file.name.toLowerCase().endsWith(".heic") ||
-      file.type === "image/heic" ||
-      file.type === "image/heif" ||
-      file.type === "";
+      let previewBlob = file;
 
-    let previewBlob = file;
-
-    if (isHeic) {
-      setIsConvertingHeic(true);
-      try {
-        previewBlob = await heic2any({
-          blob: file,
-          toType: "image/jpeg",
-          quality: 0.8,
-        });
-        if (Array.isArray(previewBlob)) previewBlob = previewBlob[0];
-      } catch (err) {
-        console.error("HEIC conversion failed:", err);
-        toast.error("Failed to process HEIC file");
-        setIsPreparingPreview(false);
-        setIsConvertingHeic(false);
-        return;
-      } finally {
-        setIsConvertingHeic(false);
+      if (isHeic) {
+        try {
+          previewBlob = await heic2any({
+            blob: file,
+            toType: "image/jpeg",
+          });
+        } catch (err) {
+          console.log(err);
+          toast.error("Failed to preview HEIC file");
+          setIsProcessingImage(false);
+          setIsEditingAvatar(false);
+          return;
+        }
       }
-    }
 
-    if (imagePreview) {
-      URL.revokeObjectURL(imagePreview);
-    }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image size should be less than 5MB");
+        setIsProcessingImage(false);
+        setIsEditingAvatar(false);
+        return;
+      }
 
-    const previewUrl = URL.createObjectURL(previewBlob);
-    setImagePreview(previewUrl);
-    setSelectedAvatarFile(file);
-    setIsPreparingPreview(false);
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+
+      const previewUrl = URL.createObjectURL(previewBlob);
+      setImagePreview(previewUrl);
+      setSelectedAvatarFile(file);
+    } catch (error) {
+      console.error("Error processing image:", error);
+      toast.error("Failed to process image");
+      setIsEditingAvatar(false);
+    } finally {
+      setIsProcessingImage(false);
+    }
   };
 
   const removePreview = () => {
@@ -133,9 +133,6 @@ const ProfileInfoTab = ({ user }) => {
     setImagePreview(null);
     setSelectedAvatarFile(null);
     setIsEditingAvatar(false);
-    setIsPreparingPreview(false);
-    setIsConvertingHeic(false);
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleCancelProfileEdit = () => {
@@ -192,10 +189,8 @@ const ProfileInfoTab = ({ user }) => {
       return;
     }
 
-    if (
-      !selectedAvatarFile.type.startsWith("image/") &&
-      !selectedAvatarFile.name.endsWith(".heic")
-    ) {
+    // Defensive re-validation in case mobile browser provides incorrect type
+    if (!selectedAvatarFile.type.startsWith("image/")) {
       toast.error("Invalid image file selected");
       return;
     }
@@ -224,10 +219,13 @@ const ProfileInfoTab = ({ user }) => {
     }
   };
 
-  const isLoading =
-    isUpdatingProfile || isUpdatingPicture || isPreparingPreview;
+  const handleAvatarClick = () => {
+    if (user.profilePicture || imagePreview) {
+      setIsImageViewerOpen(true);
+    }
+  };
 
-  const currentImageSrc = imagePreview || user.profilePicture;
+  const isLoading = isUpdatingProfile || isUpdatingPicture;
 
   return (
     <div className="space-y-6">
@@ -246,27 +244,29 @@ const ProfileInfoTab = ({ user }) => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-5 border-2 border-border rounded-lg bg-card shadow-sm">
           <div className="relative group">
             <input
-              ref={fileInputRef}
               type="file"
-              accept="image/*,.heic,.heif"
               onChange={handleFileChange}
               className="hidden"
               id="avatar-upload"
-              disabled={isLoading}
+              accept="image/*,.heic,.heif"
+              disabled={isLoading || isProcessingImage}
             />
-            <div
-              className="relative cursor-pointer"
-              onClick={() => currentImageSrc && setIsFullscreenOpen(true)}
-            >
+
+            <div className="relative">
               <Avatar
                 className={`h-24 w-24 ring-4 transition-all duration-200 ${
                   isEditingAvatar
                     ? "ring-primary shadow-lg shadow-primary/20"
                     : "ring-primary/20 dark:ring-primary/30"
-                } ${currentImageSrc ? "hover:ring-primary/50" : ""}`}
+                } ${
+                  (user.profilePicture || imagePreview) && !isProcessingImage
+                    ? "cursor-pointer hover:opacity-90"
+                    : ""
+                }`}
+                onClick={handleAvatarClick}
               >
                 <AvatarImage
-                  src={currentImageSrc ?? undefined}
+                  src={(imagePreview || user.profilePicture) ?? undefined}
                   alt={`${user.firstName} ${user.lastName}`}
                   className="object-cover"
                 />
@@ -275,28 +275,27 @@ const ProfileInfoTab = ({ user }) => {
                 </AvatarFallback>
               </Avatar>
 
-              {/* Loading Overlay for Preview/Conversion */}
-              {(isPreparingPreview || isConvertingHeic) && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
-                  <Loader2 className="h-6 w-6 animate-spin text-white" />
+              {/* Processing Overlay */}
+              {isProcessingImage && (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-full backdrop-blur-sm">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
               )}
 
-              {/* Zoom Indicator */}
-              {currentImageSrc && !isPreparingPreview && (
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/30 rounded-full">
-                  <ZoomIn className="h-6 w-6 text-white" />
+              {/* Zoom Icon on Hover */}
+              {(user.profilePicture || imagePreview) && !isProcessingImage && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer">
+                  <ZoomIn className="h-8 w-8 text-white" />
                 </div>
               )}
             </div>
 
-            {!isEditingAvatar && !isPreparingPreview && (
+            {!isEditingAvatar && !isProcessingImage && (
               <Button
                 type="button"
                 size="sm"
                 className="absolute -bottom-2 -right-2 h-9 w-9 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground"
-                onClick={(e) => {
-                  e.stopPropagation();
+                onClick={() => {
                   document.getElementById("avatar-upload")?.click();
                 }}
                 disabled={isLoading}
@@ -307,16 +306,13 @@ const ProfileInfoTab = ({ user }) => {
             )}
 
             {/* Remove Preview Button */}
-            {imagePreview && (
+            {imagePreview && !isProcessingImage && (
               <Button
                 type="button"
                 size="sm"
                 variant="destructive"
                 className="absolute -top-2 -right-2 h-7 w-7 rounded-full p-0 shadow-lg"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removePreview();
-                }}
+                onClick={removePreview}
                 disabled={isLoading}
               >
                 <X className="h-3.5 w-3.5" />
@@ -324,10 +320,19 @@ const ProfileInfoTab = ({ user }) => {
             )}
 
             {/* New Badge */}
-            {imagePreview && !isPreparingPreview && (
+            {imagePreview && !isProcessingImage && (
               <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2">
                 <Badge className="text-xs px-2.5 py-0.5 bg-primary text-primary-foreground shadow-md font-semibold">
                   New
+                </Badge>
+              </div>
+            )}
+
+            {/* Processing Badge */}
+            {isProcessingImage && (
+              <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2">
+                <Badge className="text-xs px-2.5 py-0.5 bg-orange-500 text-white shadow-md font-semibold">
+                  Processing...
                 </Badge>
               </div>
             )}
@@ -336,7 +341,7 @@ const ProfileInfoTab = ({ user }) => {
           <div className="flex-1">
             <p className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
               Profile Picture
-              {!isEditingAvatar && !isPreparingPreview && (
+              {!isEditingAvatar && !isProcessingImage && (
                 <Camera
                   className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-primary transition-colors"
                   onClick={() => {
@@ -347,15 +352,15 @@ const ProfileInfoTab = ({ user }) => {
               )}
             </p>
             <p className="text-xs text-muted-foreground">
-              {isEditingAvatar
-                ? isConvertingHeic
-                  ? "Converting HEIC image..."
-                  : isPreparingPreview
-                  ? "Preparing preview..."
-                  : "Select a new image (Max 5MB, JPG, PNG, HEIC, or GIF)"
-                : "Click avatar to view full size • Hover or click camera to change"}
+              {isProcessingImage
+                ? "Processing image, please wait..."
+                : isEditingAvatar
+                ? "Select a new image (Max 5MB, JPG, PNG, GIF, or HEIC)"
+                : user.profilePicture || imagePreview
+                ? "Click avatar to view full size • Hover to change"
+                : "Hover over avatar or click camera icon to upload"}
             </p>
-            {imagePreview && !isPreparingPreview && (
+            {imagePreview && !isProcessingImage && (
               <div className="mt-3 flex gap-2">
                 <Button
                   type="button"
@@ -587,26 +592,21 @@ const ProfileInfoTab = ({ user }) => {
         </Form>
       </div>
 
-      {/* Fullscreen Image Dialog */}
-      <Dialog open={isFullscreenOpen} onOpenChange={setIsFullscreenOpen}>
-        <DialogContent className="max-w-3xl p-0 overflow-hidden bg-transparent border-0">
-          <DialogHeader className="sr-only">
-            <DialogTitle>Profile Picture</DialogTitle>
+      {/* Full Screen Image Viewer Dialog */}
+      <Dialog open={isImageViewerOpen} onOpenChange={setIsImageViewerOpen}>
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[95vh] p-0 overflow-hidden">
+          <DialogHeader className="p-6 pb-4">
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <User className="h-5 w-5 text-primary" />
+              {user.firstName} {user.lastName}
+            </DialogTitle>
           </DialogHeader>
-          <div className="relative">
+          <div className="relative w-full h-[70vh] bg-muted/30 flex items-center justify-center">
             <img
-              src={currentImageSrc}
+              src={imagePreview || user.profilePicture}
               alt={`${user.firstName} ${user.lastName}`}
-              className="w-full h-auto max-h-screen object-contain"
+              className="max-w-full max-h-full object-contain"
             />
-            <Button
-              variant="secondary"
-              size="icon"
-              className="absolute top-4 right-4 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background"
-              onClick={() => setIsFullscreenOpen(false)}
-            >
-              <X className="h-5 w-5" />
-            </Button>
           </div>
         </DialogContent>
       </Dialog>
