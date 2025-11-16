@@ -36,7 +36,7 @@ export const AttendanceReportDisplay = ({ params, onPageChange }) => {
     return (
       <div className="space-y-6">
         {/* Summary Skeleton */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardHeader className="pb-2">
@@ -91,7 +91,7 @@ export const AttendanceReportDisplay = ({ params, onPageChange }) => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold">Attendance Reports</h2>
           <p className="text-sm text-muted-foreground mt-1">
@@ -105,7 +105,7 @@ export const AttendanceReportDisplay = ({ params, onPageChange }) => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">
@@ -184,7 +184,7 @@ export const AttendanceReportDisplay = ({ params, onPageChange }) => {
       {/* Top Attendees */}
       {topAttendees && topAttendees.length > 0 && (
         <Card>
-          <CardHeader>
+          <CardHeader className="px-4 sm:px-6">
             <div className="flex items-center gap-2">
               <Award className="h-5 w-5 text-yellow-600" />
               <CardTitle>Top Attendees</CardTitle>
@@ -193,46 +193,46 @@ export const AttendanceReportDisplay = ({ params, onPageChange }) => {
               Most active participants
             </p>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {topAttendees.map((attendee, index) => (
-                <div
-                  key={attendee.userId}
-                  className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm">
-                      #{index + 1}
-                    </div>
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage
-                        src={attendee.profilePicture}
-                        alt={attendee.userName}
-                      />
-                      <AvatarFallback>
-                        {getInitials(
-                          attendee.userName?.split(" ")[0],
-                          attendee.userName?.split(" ")[1]
-                        )}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium text-sm">{attendee.userName}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {attendee.email}
-                      </p>
-                    </div>
+          <div className="space-y-3">
+            {topAttendees.map((attendee, index) => (
+              <div
+                key={attendee.userId}
+                className="flex items-center justify-between gap-3 p-2 sm:p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+              >
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                  <div className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 text-primary font-semibold text-xs sm:text-sm flex-shrink-0">
+                    #{index + 1}
                   </div>
-                  <Badge
-                    variant="secondary"
-                    className="text-base font-semibold px-3 py-1"
-                  >
-                    {attendee.attendanceCount}
-                  </Badge>
+                  <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
+                    <AvatarImage
+                      src={attendee.profilePicture}
+                      alt={attendee.userName}
+                    />
+                    <AvatarFallback className="text-xs">
+                      {getInitials(
+                        attendee.userName?.split(" ")[0],
+                        attendee.userName?.split(" ")[1]
+                      )}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-xs sm:text-sm truncate">
+                      {attendee.userName}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {attendee.email}
+                    </p>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
+                <Badge
+                  variant="secondary"
+                  className="text-sm sm:text-base font-semibold px-2 sm:px-3 py-1 flex-shrink-0"
+                >
+                  {attendee.attendanceCount}
+                </Badge>
+              </div>
+            ))}
+          </div>
         </Card>
       )}
 
@@ -247,126 +247,157 @@ export const AttendanceReportDisplay = ({ params, onPageChange }) => {
         <CardContent>
           {attendances && attendances.length > 0 ? (
             <>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b bg-muted/50">
-                      <th className="text-left p-3 font-medium">User</th>
-                      <th className="text-left p-3 font-medium">Event</th>
-                      <th className="text-left p-3 font-medium">Location</th>
-                      <th className="text-left p-3 font-medium">
-                        Session Date
-                      </th>
-                      <th className="text-left p-3 font-medium">Check-In</th>
-                      <th className="text-left p-3 font-medium">Check-Out</th>
-                      <th className="text-left p-3 font-medium">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {attendances.map((record) => (
-                      <tr
-                        key={record.attendanceId}
-                        className="border-b hover:bg-muted/30 transition-colors"
-                      >
-                        <td className="p-3">
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-8 w-8">
-                              <AvatarFallback className="text-xs">
-                                {getInitials(
-                                  record.userName?.split(" ")[0],
-                                  record.userName?.split(" ")[1]
-                                )}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium">{record.userName}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {record.userEmail}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-3">
-                          <div>
-                            <p className="font-medium">{record.eventTitle}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {record.eventType}
-                              {record.isRecurring && " • Recurring"}
-                            </p>
-                          </div>
-                        </td>
-                        <td className="p-3">
-                          <div className="flex items-start gap-1">
-                            <MapPin className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
-                            <div>
-                              <p className="text-sm">{record.location?.name}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {record.location?.city},{" "}
-                                {record.location?.country}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-3">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3 text-muted-foreground" />
-                            <span>
-                              {format(
-                                new Date(record.sessionStartDate),
-                                "MMM d, yyyy"
-                              )}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="p-3">
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3 text-muted-foreground" />
-                            <span>
-                              {record.checkInTime
-                                ? format(new Date(record.checkInTime), "HH:mm")
-                                : "—"}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="p-3">
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3 text-muted-foreground" />
-                            <span>
-                              {record.checkOutTime
-                                ? format(new Date(record.checkOutTime), "HH:mm")
-                                : "—"}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="p-3">
-                          <Badge className={getStatusColor(record.status)}>
-                            {record.status}
-                          </Badge>
-                        </td>
+              <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0">
+                <div className="inline-block min-w-full align-middle">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="text-left p-3 font-medium whitespace-nowrap">
+                          User
+                        </th>
+                        <th className="text-left p-3 font-medium whitespace-nowrap">
+                          Event
+                        </th>
+                        <th className="text-left p-3 font-medium whitespace-nowrap">
+                          Location
+                        </th>
+                        <th className="text-left p-3 font-medium whitespace-nowrap">
+                          Session Date
+                        </th>
+                        <th className="text-left p-3 font-medium whitespace-nowrap">
+                          Check-In
+                        </th>
+                        <th className="text-left p-3 font-medium whitespace-nowrap">
+                          Check-Out
+                        </th>
+                        <th className="text-left p-3 font-medium whitespace-nowrap">
+                          Status
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {attendances.map((record) => (
+                        <tr
+                          key={record.attendanceId}
+                          className="border-b hover:bg-muted/30 transition-colors"
+                        >
+                          <td className="p-3">
+                            <div className="flex items-center gap-2 min-w-[180px]">
+                              <Avatar className="h-8 w-8 flex-shrink-0">
+                                <AvatarFallback className="text-xs">
+                                  {getInitials(
+                                    record.userName?.split(" ")[0],
+                                    record.userName?.split(" ")[1]
+                                  )}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="min-w-0 flex-1">
+                                <p className="font-medium truncate max-w-[150px]">
+                                  {record.userName}
+                                </p>
+                                <p className="text-xs text-muted-foreground truncate max-w-[150px]">
+                                  {record.userEmail}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="min-w-[180px]">
+                              <p className="font-medium break-words hyphens-auto max-w-[200px]">
+                                {record.eventTitle}
+                              </p>
+                              <p className="text-xs text-muted-foreground whitespace-nowrap">
+                                {record.eventType}
+                                {record.isRecurring && " • Recurring"}
+                              </p>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="flex items-start gap-1 min-w-[150px]">
+                              <MapPin className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm break-words hyphens-auto max-w-[180px]">
+                                  {record.location?.name}
+                                </p>
+                                <p className="text-xs text-muted-foreground whitespace-nowrap">
+                                  {record.location?.city},{" "}
+                                  {record.location?.country}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-1 whitespace-nowrap">
+                              <Calendar className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                              <span>
+                                {format(
+                                  new Date(record.sessionStartDate),
+                                  "MMM d, yyyy"
+                                )}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-1 whitespace-nowrap">
+                              <Clock className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                              <span>
+                                {record.checkInTime
+                                  ? format(
+                                      new Date(record.checkInTime),
+                                      "HH:mm"
+                                    )
+                                  : "—"}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-1 whitespace-nowrap">
+                              <Clock className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                              <span>
+                                {record.checkOutTime
+                                  ? format(
+                                      new Date(record.checkOutTime),
+                                      "HH:mm"
+                                    )
+                                  : "—"}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <Badge
+                              className={`${getStatusColor(
+                                record.status
+                              )} whitespace-nowrap`}
+                            >
+                              {record.status}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               {/* Pagination */}
               {pagination && pagination.totalPages > 1 && (
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t">
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground text-center sm:text-left">
                     Showing page {pagination.page} of {pagination.totalPages} (
                     {pagination.totalRecords} total records)
                   </p>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                     <Button
                       size="sm"
                       variant="outline"
                       disabled={pagination.page === 1}
                       onClick={() => onPageChange(pagination.page - 1)}
+                      className="w-full sm:w-auto"
                     >
                       <ChevronLeft className="h-4 w-4 mr-1" />
                       Previous
                     </Button>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 overflow-x-auto max-w-full">
                       {Array.from(
                         { length: Math.min(5, pagination.totalPages) },
                         (_, i) => {
@@ -381,7 +412,7 @@ export const AttendanceReportDisplay = ({ params, onPageChange }) => {
                                   : "outline"
                               }
                               onClick={() => onPageChange(pageNum)}
-                              className="w-8 h-8 p-0"
+                              className="w-8 h-8 p-0 flex-shrink-0"
                             >
                               {pageNum}
                             </Button>
@@ -394,6 +425,7 @@ export const AttendanceReportDisplay = ({ params, onPageChange }) => {
                       variant="outline"
                       disabled={pagination.page === pagination.totalPages}
                       onClick={() => onPageChange(pagination.page + 1)}
+                      className="w-full sm:w-auto"
                     >
                       Next
                       <ChevronRight className="h-4 w-4 ml-1" />
@@ -408,7 +440,7 @@ export const AttendanceReportDisplay = ({ params, onPageChange }) => {
               <p className="text-lg font-medium text-muted-foreground">
                 No attendance records found
               </p>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-sm text-muted-foreground mt-1 text-center px-4">
                 Try adjusting your filters to see more results
               </p>
             </div>
