@@ -11,13 +11,41 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Mail, Lock, Eye, EyeOff, Shield } from "lucide-react";
+import {
+  ArrowRight,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  Shield,
+  UserCog,
+  Users,
+} from "lucide-react";
 
 const LoginForm = ({ form, onSubmit, isLoading }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
+  };
+
+  const handleDemoLogin = (role) => {
+    const demoCredentials = {
+      admin: {
+        email: import.meta.env.VITE_ADMIN_DEMO_EMAIL,
+        password: import.meta.env.VITE_DEMO_PASSWORD,
+      },
+      attendant: {
+        email: import.meta.env.VITE_ATTENDANT_DEMO_EMAIL,
+        password: import.meta.env.VITE_DEMO_PASSWORD,
+      },
+    };
+
+    const credentials = demoCredentials[role];
+    form.setValue("email", credentials.email);
+    form.setValue("password", credentials.password);
+
+    onSubmit(credentials);
   };
 
   return (
@@ -93,7 +121,6 @@ const LoginForm = ({ form, onSubmit, isLoading }) => {
                       type="button"
                       onClick={togglePasswordVisibility}
                       className="absolute inset-y-0 right-0 pr-4 flex items-center"
-                      tabIndex={-1}
                       disabled={isLoading}
                       aria-label={
                         showPassword ? "Hide password" : "Show password"
@@ -122,8 +149,10 @@ const LoginForm = ({ form, onSubmit, isLoading }) => {
               />
               Remember me
             </label>
+
+            {/* FIXED: missing <a> tag */}
             <a
-              href="/forgot-password"
+              href="#"
               className="text-sm text-emerald-600 hover:text-emerald-700 font-medium hover:underline transition duration-200"
               tabIndex={isLoading ? -1 : 0}
             >
@@ -159,15 +188,52 @@ const LoginForm = ({ form, onSubmit, isLoading }) => {
               </>
             )}
           </Button>
+
+          {/* Demo Login Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-gray-500 font-medium">
+                Or try demo
+              </span>
+            </div>
+          </div>
+
+          {/* Demo Login Buttons */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleDemoLogin("admin")}
+              disabled={isLoading}
+              className="w-full border-2 border-gray-200 hover:border-emerald-500 hover:bg-emerald-50 text-gray-700 hover:text-emerald-700 font-medium py-3 px-4 h-auto rounded-xl transition-all duration-200 focus:ring-4 focus:ring-emerald-100 focus:outline-none flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              <UserCog className="h-4 w-4" />
+              <span className="text-sm">Admin Demo</span>
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleDemoLogin("attendant")}
+              disabled={isLoading}
+              className="w-full border-2 border-gray-200 hover:border-emerald-500 hover:bg-emerald-50 text-gray-700 hover:text-emerald-700 font-medium py-3 px-4 h-auto rounded-xl transition-all duration-200 focus:ring-4 focus:ring-emerald-100 focus:outline-none flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              <Users className="h-4 w-4" />
+              <span className="text-sm">Attendant Demo</span>
+            </Button>
+          </div>
         </form>
       </Form>
 
       {/* Footer */}
       <div className="mt-8 text-center">
         <p className="text-sm text-gray-500">
-          Need help?{" "}
+          Need help? {/* FIXED: missing <a> tag */}
           <a
-            href="/support"
+            href="#"
             className="text-emerald-600 hover:text-emerald-700 font-medium hover:underline"
           >
             Contact Support
