@@ -70,28 +70,59 @@ const ProfileInfoTab = ({ user }) => {
 
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select a valid image file");
+    // More comprehensive file type checking for mobile compatibility
+    const validTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+    ];
+    const fileType = file.type.toLowerCase();
+
+    if (!validTypes.includes(fileType)) {
+      toast.error("Please select a valid image file (JPG, PNG, GIF, or WebP)");
+      e.target.value = "";
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image size should be less than 5MB");
+      e.target.value = "";
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setImagePreview(e.target?.result);
-    };
-    reader.readAsDataURL(file);
+    // Set the file first to ensure it's available even if preview fails
     setSelectedAvatarFile(file);
+
+    const reader = new FileReader();
+
+    // Use onloadend for better mobile compatibility
+    reader.onloadend = () => {
+      if (reader.result) {
+        setImagePreview(reader.result);
+      }
+    };
+
+    reader.onerror = () => {
+      toast.error("Failed to read image file. Please try again.");
+      setSelectedAvatarFile(null);
+      setImagePreview(null);
+      e.target.value = "";
+    };
+
+    reader.readAsDataURL(file);
   };
 
   const removePreview = () => {
     setImagePreview(null);
     setSelectedAvatarFile(null);
     setIsEditingAvatar(false);
+    // Reset the file input
+    const fileInput = document.getElementById("avatar-upload");
+    if (fileInput) {
+      fileInput.value = "";
+    }
   };
 
   const handleCancelProfileEdit = () => {
@@ -177,6 +208,12 @@ const ProfileInfoTab = ({ user }) => {
       setSelectedAvatarFile(null);
       setImagePreview(null);
       setIsEditingAvatar(false);
+
+      // Reset the file input
+      const fileInput = document.getElementById("avatar-upload");
+      if (fileInput) {
+        fileInput.value = "";
+      }
     } catch (err) {
       console.error("Profile picture update error:", err);
       toast.dismiss(toastId);
@@ -206,10 +243,10 @@ const ProfileInfoTab = ({ user }) => {
         {/* Avatar Section */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-5 border-2 border-border rounded-lg bg-card shadow-sm">
           <div className="relative group">
-            {/* FIXED: Moved input outside conditional rendering */}
+            {/* File input with mobile-friendly attributes */}
             <input
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
               onChange={handleFileChange}
               className="hidden"
               id="avatar-upload"
@@ -233,21 +270,17 @@ const ProfileInfoTab = ({ user }) => {
               </AvatarFallback>
             </Avatar>
 
-            {/* Edit Avatar Button */}
+            {/* Edit Avatar Button - Using label for better mobile support */}
             {!isEditingAvatar && (
-              <Button
-                type="button"
-                size="sm"
-                className="absolute -bottom-2 -right-2 h-9 w-9 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground"
-                onClick={() => {
-                  setIsEditingAvatar(true);
-                  document.getElementById("avatar-upload")?.click();
-                }}
-                disabled={isLoading}
+              <label
+                htmlFor="avatar-upload"
+                className="absolute -bottom-2 -right-2 h-9 w-9 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => setIsEditingAvatar(true)}
                 title="Change profile picture"
+                style={isLoading ? { pointerEvents: "none", opacity: 0.5 } : {}}
               >
                 <Camera className="h-4 w-4" />
-              </Button>
+              </label>
             )}
 
             {/* Remove Preview Button */}
@@ -277,20 +310,19 @@ const ProfileInfoTab = ({ user }) => {
           <div className="flex-1">
             <p className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
               Profile Picture
-              {!isEditingAvatar && (
-                <Camera
-                  className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-primary transition-colors"
-                  onClick={() => {
-                    setIsEditingAvatar(true);
-                    document.getElementById("avatar-upload")?.click();
-                  }}
-                  title="Click to change"
-                />
+              {!isEditingAvatar && !isLoading && (
+                <label htmlFor="avatar-upload" className="cursor-pointer">
+                  <Camera
+                    className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors"
+                    onClick={() => setIsEditingAvatar(true)}
+                    title="Click to change"
+                  />
+                </label>
               )}
             </p>
             <p className="text-xs text-muted-foreground">
               {isEditingAvatar
-                ? "Select a new image (Max 5MB, JPG, PNG, or GIF)"
+                ? "Select a new image (Max 5MB, JPG, PNG, GIF, or WebP)"
                 : "Hover over avatar or click camera icon to change"}
             </p>
             {imagePreview && (
